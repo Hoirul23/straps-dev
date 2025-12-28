@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model activity_logs {
+  id         Int       @id @default(autoincrement())
+  timestamp  DateTime? @db.Timestamp(6)
+  status     String?   @db.VarChar
+  confidence String?   @db.VarChar
+  details    Json?
+
+  @@index([id], map: "ix_activity_logs_id")
+}
+
+model training_menus {
+  id          Int           @id @default(autoincrement())
+  name        String?       @db.VarChar
+  exercises   Json?
+  created_at  DateTime?     @db.Timestamp(6)
+  user_recaps user_recaps[]
+
+  @@index([id], map: "ix_training_menus_id")
+  @@index([name], map: "ix_training_menus_name")
+}
+
+model user_recaps {
+  id             Int             @id @default(autoincrement())
+  menu_id        Int?
+  summary        Json?
+  completed_at   DateTime?       @db.Timestamp(6)
+  training_menus training_menus? @relation(fields: [menu_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_user_recaps_id")
+}
