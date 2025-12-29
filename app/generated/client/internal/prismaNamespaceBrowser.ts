@@ -49,8 +49,8 @@ export const AnyNull = runtime.objectEnumValues.instances.AnyNull
 
 
 export const ModelName = {
+  users: 'users',
   activity_logs: 'activity_logs',
-  User: 'User',
   training_menus: 'training_menus',
   user_recaps: 'user_recaps'
 } as const
@@ -71,28 +71,27 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const UsersScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  role: 'role',
+  coach_id: 'coach_id',
+  created_at: 'created_at'
+} as const
+
+export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]
+
+
 export const Activity_logsScalarFieldEnum = {
   id: 'id',
   timestamp: 'timestamp',
   status: 'status',
   confidence: 'confidence',
-  details: 'details'
+  details: 'details',
+  user_id: 'user_id'
 } as const
 
 export type Activity_logsScalarFieldEnum = (typeof Activity_logsScalarFieldEnum)[keyof typeof Activity_logsScalarFieldEnum]
-
-
-export const UserScalarFieldEnum = {
-  id: 'id',
-  email: 'email',
-  password: 'password',
-  name: 'name',
-  role: 'role',
-  coachId: 'coachId',
-  created_at: 'created_at'
-} as const
-
-export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
 export const Training_menusScalarFieldEnum = {
@@ -100,8 +99,8 @@ export const Training_menusScalarFieldEnum = {
   name: 'name',
   exercises: 'exercises',
   created_at: 'created_at',
-  coachId: 'coachId',
-  clientId: 'clientId'
+  author_id: 'author_id',
+  client_id: 'client_id'
 } as const
 
 export type Training_menusScalarFieldEnum = (typeof Training_menusScalarFieldEnum)[keyof typeof Training_menusScalarFieldEnum]
@@ -110,9 +109,9 @@ export type Training_menusScalarFieldEnum = (typeof Training_menusScalarFieldEnu
 export const User_recapsScalarFieldEnum = {
   id: 'id',
   menu_id: 'menu_id',
+  user_id: 'user_id',
   summary: 'summary',
-  completed_at: 'completed_at',
-  userId: 'userId'
+  completed_at: 'completed_at'
 } as const
 
 export type User_recapsScalarFieldEnum = (typeof User_recapsScalarFieldEnum)[keyof typeof User_recapsScalarFieldEnum]
@@ -142,6 +141,14 @@ export const QueryMode = {
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
 export const JsonNullValueFilter = {
   DbNull: DbNull,
   JsonNull: JsonNull,
@@ -149,12 +156,4 @@ export const JsonNullValueFilter = {
 } as const
 
 export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
-
-
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

@@ -29,35 +29,33 @@ export type AggregateUser_recaps = {
 export type User_recapsAvgAggregateOutputType = {
   id: number | null
   menu_id: number | null
-  userId: number | null
 }
 
 export type User_recapsSumAggregateOutputType = {
   id: number | null
   menu_id: number | null
-  userId: number | null
 }
 
 export type User_recapsMinAggregateOutputType = {
   id: number | null
   menu_id: number | null
+  user_id: string | null
   completed_at: Date | null
-  userId: number | null
 }
 
 export type User_recapsMaxAggregateOutputType = {
   id: number | null
   menu_id: number | null
+  user_id: string | null
   completed_at: Date | null
-  userId: number | null
 }
 
 export type User_recapsCountAggregateOutputType = {
   id: number
   menu_id: number
+  user_id: number
   summary: number
   completed_at: number
-  userId: number
   _all: number
 }
 
@@ -65,35 +63,33 @@ export type User_recapsCountAggregateOutputType = {
 export type User_recapsAvgAggregateInputType = {
   id?: true
   menu_id?: true
-  userId?: true
 }
 
 export type User_recapsSumAggregateInputType = {
   id?: true
   menu_id?: true
-  userId?: true
 }
 
 export type User_recapsMinAggregateInputType = {
   id?: true
   menu_id?: true
+  user_id?: true
   completed_at?: true
-  userId?: true
 }
 
 export type User_recapsMaxAggregateInputType = {
   id?: true
   menu_id?: true
+  user_id?: true
   completed_at?: true
-  userId?: true
 }
 
 export type User_recapsCountAggregateInputType = {
   id?: true
   menu_id?: true
+  user_id?: true
   summary?: true
   completed_at?: true
-  userId?: true
   _all?: true
 }
 
@@ -186,9 +182,9 @@ export type user_recapsGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 export type User_recapsGroupByOutputType = {
   id: number
   menu_id: number | null
+  user_id: string | null
   summary: runtime.JsonValue | null
   completed_at: Date | null
-  userId: number | null
   _count: User_recapsCountAggregateOutputType | null
   _avg: User_recapsAvgAggregateOutputType | null
   _sum: User_recapsSumAggregateOutputType | null
@@ -217,21 +213,21 @@ export type user_recapsWhereInput = {
   NOT?: Prisma.user_recapsWhereInput | Prisma.user_recapsWhereInput[]
   id?: Prisma.IntFilter<"user_recaps"> | number
   menu_id?: Prisma.IntNullableFilter<"user_recaps"> | number | null
+  user_id?: Prisma.StringNullableFilter<"user_recaps"> | string | null
   summary?: Prisma.JsonNullableFilter<"user_recaps">
   completed_at?: Prisma.DateTimeNullableFilter<"user_recaps"> | Date | string | null
-  userId?: Prisma.IntNullableFilter<"user_recaps"> | number | null
-  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   training_menus?: Prisma.XOR<Prisma.Training_menusNullableScalarRelationFilter, Prisma.training_menusWhereInput> | null
+  user?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
 }
 
 export type user_recapsOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   menu_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  user_id?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   completed_at?: Prisma.SortOrderInput | Prisma.SortOrder
-  userId?: Prisma.SortOrderInput | Prisma.SortOrder
-  user?: Prisma.UserOrderByWithRelationInput
   training_menus?: Prisma.training_menusOrderByWithRelationInput
+  user?: Prisma.usersOrderByWithRelationInput
 }
 
 export type user_recapsWhereUniqueInput = Prisma.AtLeast<{
@@ -240,19 +236,19 @@ export type user_recapsWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.user_recapsWhereInput[]
   NOT?: Prisma.user_recapsWhereInput | Prisma.user_recapsWhereInput[]
   menu_id?: Prisma.IntNullableFilter<"user_recaps"> | number | null
+  user_id?: Prisma.StringNullableFilter<"user_recaps"> | string | null
   summary?: Prisma.JsonNullableFilter<"user_recaps">
   completed_at?: Prisma.DateTimeNullableFilter<"user_recaps"> | Date | string | null
-  userId?: Prisma.IntNullableFilter<"user_recaps"> | number | null
-  user?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   training_menus?: Prisma.XOR<Prisma.Training_menusNullableScalarRelationFilter, Prisma.training_menusWhereInput> | null
+  user?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
 }, "id">
 
 export type user_recapsOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   menu_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  user_id?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   completed_at?: Prisma.SortOrderInput | Prisma.SortOrder
-  userId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.user_recapsCountOrderByAggregateInput
   _avg?: Prisma.user_recapsAvgOrderByAggregateInput
   _max?: Prisma.user_recapsMaxOrderByAggregateInput
@@ -266,47 +262,47 @@ export type user_recapsScalarWhereWithAggregatesInput = {
   NOT?: Prisma.user_recapsScalarWhereWithAggregatesInput | Prisma.user_recapsScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"user_recaps"> | number
   menu_id?: Prisma.IntNullableWithAggregatesFilter<"user_recaps"> | number | null
+  user_id?: Prisma.StringNullableWithAggregatesFilter<"user_recaps"> | string | null
   summary?: Prisma.JsonNullableWithAggregatesFilter<"user_recaps">
   completed_at?: Prisma.DateTimeNullableWithAggregatesFilter<"user_recaps"> | Date | string | null
-  userId?: Prisma.IntNullableWithAggregatesFilter<"user_recaps"> | number | null
 }
 
 export type user_recapsCreateInput = {
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Date | string | null
-  user?: Prisma.UserCreateNestedOneWithoutRecapsInput
   training_menus?: Prisma.training_menusCreateNestedOneWithoutUser_recapsInput
+  user?: Prisma.usersCreateNestedOneWithoutRecapsInput
 }
 
 export type user_recapsUncheckedCreateInput = {
   id?: number
   menu_id?: number | null
+  user_id?: string | null
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Date | string | null
-  userId?: number | null
 }
 
 export type user_recapsUpdateInput = {
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  user?: Prisma.UserUpdateOneWithoutRecapsNestedInput
   training_menus?: Prisma.training_menusUpdateOneWithoutUser_recapsNestedInput
+  user?: Prisma.usersUpdateOneWithoutRecapsNestedInput
 }
 
 export type user_recapsUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   menu_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  userId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type user_recapsCreateManyInput = {
   id?: number
   menu_id?: number | null
+  user_id?: string | null
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Date | string | null
-  userId?: number | null
 }
 
 export type user_recapsUpdateManyMutationInput = {
@@ -317,9 +313,9 @@ export type user_recapsUpdateManyMutationInput = {
 export type user_recapsUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   menu_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  userId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type User_recapsListRelationFilter = {
@@ -335,35 +331,33 @@ export type user_recapsOrderByRelationAggregateInput = {
 export type user_recapsCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   menu_id?: Prisma.SortOrder
+  user_id?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   completed_at?: Prisma.SortOrder
-  userId?: Prisma.SortOrder
 }
 
 export type user_recapsAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   menu_id?: Prisma.SortOrder
-  userId?: Prisma.SortOrder
 }
 
 export type user_recapsMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   menu_id?: Prisma.SortOrder
+  user_id?: Prisma.SortOrder
   completed_at?: Prisma.SortOrder
-  userId?: Prisma.SortOrder
 }
 
 export type user_recapsMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   menu_id?: Prisma.SortOrder
+  user_id?: Prisma.SortOrder
   completed_at?: Prisma.SortOrder
-  userId?: Prisma.SortOrder
 }
 
 export type user_recapsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   menu_id?: Prisma.SortOrder
-  userId?: Prisma.SortOrder
 }
 
 export type user_recapsCreateNestedManyWithoutUserInput = {
@@ -450,6 +444,14 @@ export type user_recapsUncheckedUpdateManyWithoutTraining_menusNestedInput = {
   deleteMany?: Prisma.user_recapsScalarWhereInput | Prisma.user_recapsScalarWhereInput[]
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type user_recapsCreateWithoutUserInput = {
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Date | string | null
@@ -495,22 +497,22 @@ export type user_recapsScalarWhereInput = {
   NOT?: Prisma.user_recapsScalarWhereInput | Prisma.user_recapsScalarWhereInput[]
   id?: Prisma.IntFilter<"user_recaps"> | number
   menu_id?: Prisma.IntNullableFilter<"user_recaps"> | number | null
+  user_id?: Prisma.StringNullableFilter<"user_recaps"> | string | null
   summary?: Prisma.JsonNullableFilter<"user_recaps">
   completed_at?: Prisma.DateTimeNullableFilter<"user_recaps"> | Date | string | null
-  userId?: Prisma.IntNullableFilter<"user_recaps"> | number | null
 }
 
 export type user_recapsCreateWithoutTraining_menusInput = {
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Date | string | null
-  user?: Prisma.UserCreateNestedOneWithoutRecapsInput
+  user?: Prisma.usersCreateNestedOneWithoutRecapsInput
 }
 
 export type user_recapsUncheckedCreateWithoutTraining_menusInput = {
   id?: number
+  user_id?: string | null
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Date | string | null
-  userId?: number | null
 }
 
 export type user_recapsCreateOrConnectWithoutTraining_menusInput = {
@@ -568,29 +570,29 @@ export type user_recapsUncheckedUpdateManyWithoutUserInput = {
 
 export type user_recapsCreateManyTraining_menusInput = {
   id?: number
+  user_id?: string | null
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Date | string | null
-  userId?: number | null
 }
 
 export type user_recapsUpdateWithoutTraining_menusInput = {
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  user?: Prisma.UserUpdateOneWithoutRecapsNestedInput
+  user?: Prisma.usersUpdateOneWithoutRecapsNestedInput
 }
 
 export type user_recapsUncheckedUpdateWithoutTraining_menusInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  userId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type user_recapsUncheckedUpdateManyWithoutTraining_menusInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  userId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -598,67 +600,67 @@ export type user_recapsUncheckedUpdateManyWithoutTraining_menusInput = {
 export type user_recapsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   menu_id?: boolean
+  user_id?: boolean
   summary?: boolean
   completed_at?: boolean
-  userId?: boolean
-  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
   training_menus?: boolean | Prisma.user_recaps$training_menusArgs<ExtArgs>
+  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
 }, ExtArgs["result"]["user_recaps"]>
 
 export type user_recapsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   menu_id?: boolean
+  user_id?: boolean
   summary?: boolean
   completed_at?: boolean
-  userId?: boolean
-  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
   training_menus?: boolean | Prisma.user_recaps$training_menusArgs<ExtArgs>
+  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
 }, ExtArgs["result"]["user_recaps"]>
 
 export type user_recapsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   menu_id?: boolean
+  user_id?: boolean
   summary?: boolean
   completed_at?: boolean
-  userId?: boolean
-  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
   training_menus?: boolean | Prisma.user_recaps$training_menusArgs<ExtArgs>
+  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
 }, ExtArgs["result"]["user_recaps"]>
 
 export type user_recapsSelectScalar = {
   id?: boolean
   menu_id?: boolean
+  user_id?: boolean
   summary?: boolean
   completed_at?: boolean
-  userId?: boolean
 }
 
-export type user_recapsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "menu_id" | "summary" | "completed_at" | "userId", ExtArgs["result"]["user_recaps"]>
+export type user_recapsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "menu_id" | "user_id" | "summary" | "completed_at", ExtArgs["result"]["user_recaps"]>
 export type user_recapsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
   training_menus?: boolean | Prisma.user_recaps$training_menusArgs<ExtArgs>
+  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
 }
 export type user_recapsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
   training_menus?: boolean | Prisma.user_recaps$training_menusArgs<ExtArgs>
+  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
 }
 export type user_recapsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
   training_menus?: boolean | Prisma.user_recaps$training_menusArgs<ExtArgs>
+  user?: boolean | Prisma.user_recaps$userArgs<ExtArgs>
 }
 
 export type $user_recapsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "user_recaps"
   objects: {
-    user: Prisma.$UserPayload<ExtArgs> | null
     training_menus: Prisma.$training_menusPayload<ExtArgs> | null
+    user: Prisma.$usersPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
     menu_id: number | null
+    user_id: string | null
     summary: runtime.JsonValue | null
     completed_at: Date | null
-    userId: number | null
   }, ExtArgs["result"]["user_recaps"]>
   composites: {}
 }
@@ -1053,8 +1055,8 @@ readonly fields: user_recapsFieldRefs;
  */
 export interface Prisma__user_recapsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  user<T extends Prisma.user_recaps$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.user_recaps$userArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   training_menus<T extends Prisma.user_recaps$training_menusArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.user_recaps$training_menusArgs<ExtArgs>>): Prisma.Prisma__training_menusClient<runtime.Types.Result.GetResult<Prisma.$training_menusPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  user<T extends Prisma.user_recaps$userArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.user_recaps$userArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1086,9 +1088,9 @@ export interface Prisma__user_recapsClient<T, Null = never, ExtArgs extends runt
 export interface user_recapsFieldRefs {
   readonly id: Prisma.FieldRef<"user_recaps", 'Int'>
   readonly menu_id: Prisma.FieldRef<"user_recaps", 'Int'>
+  readonly user_id: Prisma.FieldRef<"user_recaps", 'String'>
   readonly summary: Prisma.FieldRef<"user_recaps", 'Json'>
   readonly completed_at: Prisma.FieldRef<"user_recaps", 'DateTime'>
-  readonly userId: Prisma.FieldRef<"user_recaps", 'Int'>
 }
     
 
@@ -1485,25 +1487,6 @@ export type user_recapsDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.I
 }
 
 /**
- * user_recaps.user
- */
-export type user_recaps$userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the User
-   */
-  select?: Prisma.UserSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the User
-   */
-  omit?: Prisma.UserOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.UserInclude<ExtArgs> | null
-  where?: Prisma.UserWhereInput
-}
-
-/**
  * user_recaps.training_menus
  */
 export type user_recaps$training_menusArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1520,6 +1503,25 @@ export type user_recaps$training_menusArgs<ExtArgs extends runtime.Types.Extensi
    */
   include?: Prisma.training_menusInclude<ExtArgs> | null
   where?: Prisma.training_menusWhereInput
+}
+
+/**
+ * user_recaps.user
+ */
+export type user_recaps$userArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the users
+   */
+  select?: Prisma.usersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the users
+   */
+  omit?: Prisma.usersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.usersInclude<ExtArgs> | null
+  where?: Prisma.usersWhereInput
 }
 
 /**

@@ -29,8 +29,8 @@ export * from "./enums.js"
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more Activity_logs
- * const activity_logs = await prisma.activity_logs.findMany()
+ * // Fetch zero or more Users
+ * const users = await prisma.users.findMany()
  * ```
  * 
  * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
@@ -45,15 +45,15 @@ path.join(__dirname, "libquery_engine-debian-openssl-3.0.x.so.node")
 path.join(process.cwd(), "app/generated/client/libquery_engine-debian-openssl-3.0.x.so.node")
 
 /**
+ * Model users
+ * 
+ */
+export type users = Prisma.usersModel
+/**
  * Model activity_logs
  * 
  */
 export type activity_logs = Prisma.activity_logsModel
-/**
- * Model User
- * 
- */
-export type User = Prisma.UserModel
 /**
  * Model training_menus
  * 

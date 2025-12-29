@@ -28,30 +28,26 @@ export type AggregateTraining_menus = {
 
 export type Training_menusAvgAggregateOutputType = {
   id: number | null
-  coachId: number | null
-  clientId: number | null
 }
 
 export type Training_menusSumAggregateOutputType = {
   id: number | null
-  coachId: number | null
-  clientId: number | null
 }
 
 export type Training_menusMinAggregateOutputType = {
   id: number | null
   name: string | null
   created_at: Date | null
-  coachId: number | null
-  clientId: number | null
+  author_id: string | null
+  client_id: string | null
 }
 
 export type Training_menusMaxAggregateOutputType = {
   id: number | null
   name: string | null
   created_at: Date | null
-  coachId: number | null
-  clientId: number | null
+  author_id: string | null
+  client_id: string | null
 }
 
 export type Training_menusCountAggregateOutputType = {
@@ -59,38 +55,34 @@ export type Training_menusCountAggregateOutputType = {
   name: number
   exercises: number
   created_at: number
-  coachId: number
-  clientId: number
+  author_id: number
+  client_id: number
   _all: number
 }
 
 
 export type Training_menusAvgAggregateInputType = {
   id?: true
-  coachId?: true
-  clientId?: true
 }
 
 export type Training_menusSumAggregateInputType = {
   id?: true
-  coachId?: true
-  clientId?: true
 }
 
 export type Training_menusMinAggregateInputType = {
   id?: true
   name?: true
   created_at?: true
-  coachId?: true
-  clientId?: true
+  author_id?: true
+  client_id?: true
 }
 
 export type Training_menusMaxAggregateInputType = {
   id?: true
   name?: true
   created_at?: true
-  coachId?: true
-  clientId?: true
+  author_id?: true
+  client_id?: true
 }
 
 export type Training_menusCountAggregateInputType = {
@@ -98,8 +90,8 @@ export type Training_menusCountAggregateInputType = {
   name?: true
   exercises?: true
   created_at?: true
-  coachId?: true
-  clientId?: true
+  author_id?: true
+  client_id?: true
   _all?: true
 }
 
@@ -194,8 +186,8 @@ export type Training_menusGroupByOutputType = {
   name: string | null
   exercises: runtime.JsonValue | null
   created_at: Date | null
-  coachId: number | null
-  clientId: number | null
+  author_id: string | null
+  client_id: string | null
   _count: Training_menusCountAggregateOutputType | null
   _avg: Training_menusAvgAggregateOutputType | null
   _sum: Training_menusSumAggregateOutputType | null
@@ -226,10 +218,10 @@ export type training_menusWhereInput = {
   name?: Prisma.StringNullableFilter<"training_menus"> | string | null
   exercises?: Prisma.JsonNullableFilter<"training_menus">
   created_at?: Prisma.DateTimeNullableFilter<"training_menus"> | Date | string | null
-  coachId?: Prisma.IntNullableFilter<"training_menus"> | number | null
-  clientId?: Prisma.IntNullableFilter<"training_menus"> | number | null
-  coach?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
-  client?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  author_id?: Prisma.StringNullableFilter<"training_menus"> | string | null
+  client_id?: Prisma.StringNullableFilter<"training_menus"> | string | null
+  author?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  assigned_client?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
   user_recaps?: Prisma.User_recapsListRelationFilter
 }
 
@@ -238,10 +230,10 @@ export type training_menusOrderByWithRelationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   exercises?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrderInput | Prisma.SortOrder
-  coachId?: Prisma.SortOrderInput | Prisma.SortOrder
-  clientId?: Prisma.SortOrderInput | Prisma.SortOrder
-  coach?: Prisma.UserOrderByWithRelationInput
-  client?: Prisma.UserOrderByWithRelationInput
+  author_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  client_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  author?: Prisma.usersOrderByWithRelationInput
+  assigned_client?: Prisma.usersOrderByWithRelationInput
   user_recaps?: Prisma.user_recapsOrderByRelationAggregateInput
 }
 
@@ -253,10 +245,10 @@ export type training_menusWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringNullableFilter<"training_menus"> | string | null
   exercises?: Prisma.JsonNullableFilter<"training_menus">
   created_at?: Prisma.DateTimeNullableFilter<"training_menus"> | Date | string | null
-  coachId?: Prisma.IntNullableFilter<"training_menus"> | number | null
-  clientId?: Prisma.IntNullableFilter<"training_menus"> | number | null
-  coach?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
-  client?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
+  author_id?: Prisma.StringNullableFilter<"training_menus"> | string | null
+  client_id?: Prisma.StringNullableFilter<"training_menus"> | string | null
+  author?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
+  assigned_client?: Prisma.XOR<Prisma.UsersNullableScalarRelationFilter, Prisma.usersWhereInput> | null
   user_recaps?: Prisma.User_recapsListRelationFilter
 }, "id">
 
@@ -265,8 +257,8 @@ export type training_menusOrderByWithAggregationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   exercises?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrderInput | Prisma.SortOrder
-  coachId?: Prisma.SortOrderInput | Prisma.SortOrder
-  clientId?: Prisma.SortOrderInput | Prisma.SortOrder
+  author_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  client_id?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.training_menusCountOrderByAggregateInput
   _avg?: Prisma.training_menusAvgOrderByAggregateInput
   _max?: Prisma.training_menusMaxOrderByAggregateInput
@@ -282,16 +274,16 @@ export type training_menusScalarWhereWithAggregatesInput = {
   name?: Prisma.StringNullableWithAggregatesFilter<"training_menus"> | string | null
   exercises?: Prisma.JsonNullableWithAggregatesFilter<"training_menus">
   created_at?: Prisma.DateTimeNullableWithAggregatesFilter<"training_menus"> | Date | string | null
-  coachId?: Prisma.IntNullableWithAggregatesFilter<"training_menus"> | number | null
-  clientId?: Prisma.IntNullableWithAggregatesFilter<"training_menus"> | number | null
+  author_id?: Prisma.StringNullableWithAggregatesFilter<"training_menus"> | string | null
+  client_id?: Prisma.StringNullableWithAggregatesFilter<"training_menus"> | string | null
 }
 
 export type training_menusCreateInput = {
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  coach?: Prisma.UserCreateNestedOneWithoutCreatedMenusInput
-  client?: Prisma.UserCreateNestedOneWithoutAssignedMenusInput
+  author?: Prisma.usersCreateNestedOneWithoutCreated_menusInput
+  assigned_client?: Prisma.usersCreateNestedOneWithoutAssigned_menusInput
   user_recaps?: Prisma.user_recapsCreateNestedManyWithoutTraining_menusInput
 }
 
@@ -300,8 +292,8 @@ export type training_menusUncheckedCreateInput = {
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  coachId?: number | null
-  clientId?: number | null
+  author_id?: string | null
+  client_id?: string | null
   user_recaps?: Prisma.user_recapsUncheckedCreateNestedManyWithoutTraining_menusInput
 }
 
@@ -309,8 +301,8 @@ export type training_menusUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  coach?: Prisma.UserUpdateOneWithoutCreatedMenusNestedInput
-  client?: Prisma.UserUpdateOneWithoutAssignedMenusNestedInput
+  author?: Prisma.usersUpdateOneWithoutCreated_menusNestedInput
+  assigned_client?: Prisma.usersUpdateOneWithoutAssigned_menusNestedInput
   user_recaps?: Prisma.user_recapsUpdateManyWithoutTraining_menusNestedInput
 }
 
@@ -319,8 +311,8 @@ export type training_menusUncheckedUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  coachId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  clientId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  author_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_recaps?: Prisma.user_recapsUncheckedUpdateManyWithoutTraining_menusNestedInput
 }
 
@@ -329,8 +321,8 @@ export type training_menusCreateManyInput = {
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  coachId?: number | null
-  clientId?: number | null
+  author_id?: string | null
+  client_id?: string | null
 }
 
 export type training_menusUpdateManyMutationInput = {
@@ -344,8 +336,8 @@ export type training_menusUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  coachId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  clientId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  author_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type Training_menusListRelationFilter = {
@@ -363,36 +355,32 @@ export type training_menusCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   exercises?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
-  coachId?: Prisma.SortOrder
-  clientId?: Prisma.SortOrder
+  author_id?: Prisma.SortOrder
+  client_id?: Prisma.SortOrder
 }
 
 export type training_menusAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  coachId?: Prisma.SortOrder
-  clientId?: Prisma.SortOrder
 }
 
 export type training_menusMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
-  coachId?: Prisma.SortOrder
-  clientId?: Prisma.SortOrder
+  author_id?: Prisma.SortOrder
+  client_id?: Prisma.SortOrder
 }
 
 export type training_menusMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
-  coachId?: Prisma.SortOrder
-  clientId?: Prisma.SortOrder
+  author_id?: Prisma.SortOrder
+  client_id?: Prisma.SortOrder
 }
 
 export type training_menusSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  coachId?: Prisma.SortOrder
-  clientId?: Prisma.SortOrder
 }
 
 export type Training_menusNullableScalarRelationFilter = {
@@ -400,87 +388,87 @@ export type Training_menusNullableScalarRelationFilter = {
   isNot?: Prisma.training_menusWhereInput | null
 }
 
-export type training_menusCreateNestedManyWithoutCoachInput = {
-  create?: Prisma.XOR<Prisma.training_menusCreateWithoutCoachInput, Prisma.training_menusUncheckedCreateWithoutCoachInput> | Prisma.training_menusCreateWithoutCoachInput[] | Prisma.training_menusUncheckedCreateWithoutCoachInput[]
-  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutCoachInput | Prisma.training_menusCreateOrConnectWithoutCoachInput[]
-  createMany?: Prisma.training_menusCreateManyCoachInputEnvelope
+export type training_menusCreateNestedManyWithoutAuthorInput = {
+  create?: Prisma.XOR<Prisma.training_menusCreateWithoutAuthorInput, Prisma.training_menusUncheckedCreateWithoutAuthorInput> | Prisma.training_menusCreateWithoutAuthorInput[] | Prisma.training_menusUncheckedCreateWithoutAuthorInput[]
+  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutAuthorInput | Prisma.training_menusCreateOrConnectWithoutAuthorInput[]
+  createMany?: Prisma.training_menusCreateManyAuthorInputEnvelope
   connect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
 }
 
-export type training_menusCreateNestedManyWithoutClientInput = {
-  create?: Prisma.XOR<Prisma.training_menusCreateWithoutClientInput, Prisma.training_menusUncheckedCreateWithoutClientInput> | Prisma.training_menusCreateWithoutClientInput[] | Prisma.training_menusUncheckedCreateWithoutClientInput[]
-  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutClientInput | Prisma.training_menusCreateOrConnectWithoutClientInput[]
-  createMany?: Prisma.training_menusCreateManyClientInputEnvelope
+export type training_menusCreateNestedManyWithoutAssigned_clientInput = {
+  create?: Prisma.XOR<Prisma.training_menusCreateWithoutAssigned_clientInput, Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput> | Prisma.training_menusCreateWithoutAssigned_clientInput[] | Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput[]
+  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutAssigned_clientInput | Prisma.training_menusCreateOrConnectWithoutAssigned_clientInput[]
+  createMany?: Prisma.training_menusCreateManyAssigned_clientInputEnvelope
   connect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
 }
 
-export type training_menusUncheckedCreateNestedManyWithoutCoachInput = {
-  create?: Prisma.XOR<Prisma.training_menusCreateWithoutCoachInput, Prisma.training_menusUncheckedCreateWithoutCoachInput> | Prisma.training_menusCreateWithoutCoachInput[] | Prisma.training_menusUncheckedCreateWithoutCoachInput[]
-  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutCoachInput | Prisma.training_menusCreateOrConnectWithoutCoachInput[]
-  createMany?: Prisma.training_menusCreateManyCoachInputEnvelope
+export type training_menusUncheckedCreateNestedManyWithoutAuthorInput = {
+  create?: Prisma.XOR<Prisma.training_menusCreateWithoutAuthorInput, Prisma.training_menusUncheckedCreateWithoutAuthorInput> | Prisma.training_menusCreateWithoutAuthorInput[] | Prisma.training_menusUncheckedCreateWithoutAuthorInput[]
+  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutAuthorInput | Prisma.training_menusCreateOrConnectWithoutAuthorInput[]
+  createMany?: Prisma.training_menusCreateManyAuthorInputEnvelope
   connect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
 }
 
-export type training_menusUncheckedCreateNestedManyWithoutClientInput = {
-  create?: Prisma.XOR<Prisma.training_menusCreateWithoutClientInput, Prisma.training_menusUncheckedCreateWithoutClientInput> | Prisma.training_menusCreateWithoutClientInput[] | Prisma.training_menusUncheckedCreateWithoutClientInput[]
-  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutClientInput | Prisma.training_menusCreateOrConnectWithoutClientInput[]
-  createMany?: Prisma.training_menusCreateManyClientInputEnvelope
+export type training_menusUncheckedCreateNestedManyWithoutAssigned_clientInput = {
+  create?: Prisma.XOR<Prisma.training_menusCreateWithoutAssigned_clientInput, Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput> | Prisma.training_menusCreateWithoutAssigned_clientInput[] | Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput[]
+  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutAssigned_clientInput | Prisma.training_menusCreateOrConnectWithoutAssigned_clientInput[]
+  createMany?: Prisma.training_menusCreateManyAssigned_clientInputEnvelope
   connect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
 }
 
-export type training_menusUpdateManyWithoutCoachNestedInput = {
-  create?: Prisma.XOR<Prisma.training_menusCreateWithoutCoachInput, Prisma.training_menusUncheckedCreateWithoutCoachInput> | Prisma.training_menusCreateWithoutCoachInput[] | Prisma.training_menusUncheckedCreateWithoutCoachInput[]
-  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutCoachInput | Prisma.training_menusCreateOrConnectWithoutCoachInput[]
-  upsert?: Prisma.training_menusUpsertWithWhereUniqueWithoutCoachInput | Prisma.training_menusUpsertWithWhereUniqueWithoutCoachInput[]
-  createMany?: Prisma.training_menusCreateManyCoachInputEnvelope
+export type training_menusUpdateManyWithoutAuthorNestedInput = {
+  create?: Prisma.XOR<Prisma.training_menusCreateWithoutAuthorInput, Prisma.training_menusUncheckedCreateWithoutAuthorInput> | Prisma.training_menusCreateWithoutAuthorInput[] | Prisma.training_menusUncheckedCreateWithoutAuthorInput[]
+  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutAuthorInput | Prisma.training_menusCreateOrConnectWithoutAuthorInput[]
+  upsert?: Prisma.training_menusUpsertWithWhereUniqueWithoutAuthorInput | Prisma.training_menusUpsertWithWhereUniqueWithoutAuthorInput[]
+  createMany?: Prisma.training_menusCreateManyAuthorInputEnvelope
   set?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   disconnect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   delete?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   connect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
-  update?: Prisma.training_menusUpdateWithWhereUniqueWithoutCoachInput | Prisma.training_menusUpdateWithWhereUniqueWithoutCoachInput[]
-  updateMany?: Prisma.training_menusUpdateManyWithWhereWithoutCoachInput | Prisma.training_menusUpdateManyWithWhereWithoutCoachInput[]
+  update?: Prisma.training_menusUpdateWithWhereUniqueWithoutAuthorInput | Prisma.training_menusUpdateWithWhereUniqueWithoutAuthorInput[]
+  updateMany?: Prisma.training_menusUpdateManyWithWhereWithoutAuthorInput | Prisma.training_menusUpdateManyWithWhereWithoutAuthorInput[]
   deleteMany?: Prisma.training_menusScalarWhereInput | Prisma.training_menusScalarWhereInput[]
 }
 
-export type training_menusUpdateManyWithoutClientNestedInput = {
-  create?: Prisma.XOR<Prisma.training_menusCreateWithoutClientInput, Prisma.training_menusUncheckedCreateWithoutClientInput> | Prisma.training_menusCreateWithoutClientInput[] | Prisma.training_menusUncheckedCreateWithoutClientInput[]
-  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutClientInput | Prisma.training_menusCreateOrConnectWithoutClientInput[]
-  upsert?: Prisma.training_menusUpsertWithWhereUniqueWithoutClientInput | Prisma.training_menusUpsertWithWhereUniqueWithoutClientInput[]
-  createMany?: Prisma.training_menusCreateManyClientInputEnvelope
+export type training_menusUpdateManyWithoutAssigned_clientNestedInput = {
+  create?: Prisma.XOR<Prisma.training_menusCreateWithoutAssigned_clientInput, Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput> | Prisma.training_menusCreateWithoutAssigned_clientInput[] | Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput[]
+  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutAssigned_clientInput | Prisma.training_menusCreateOrConnectWithoutAssigned_clientInput[]
+  upsert?: Prisma.training_menusUpsertWithWhereUniqueWithoutAssigned_clientInput | Prisma.training_menusUpsertWithWhereUniqueWithoutAssigned_clientInput[]
+  createMany?: Prisma.training_menusCreateManyAssigned_clientInputEnvelope
   set?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   disconnect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   delete?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   connect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
-  update?: Prisma.training_menusUpdateWithWhereUniqueWithoutClientInput | Prisma.training_menusUpdateWithWhereUniqueWithoutClientInput[]
-  updateMany?: Prisma.training_menusUpdateManyWithWhereWithoutClientInput | Prisma.training_menusUpdateManyWithWhereWithoutClientInput[]
+  update?: Prisma.training_menusUpdateWithWhereUniqueWithoutAssigned_clientInput | Prisma.training_menusUpdateWithWhereUniqueWithoutAssigned_clientInput[]
+  updateMany?: Prisma.training_menusUpdateManyWithWhereWithoutAssigned_clientInput | Prisma.training_menusUpdateManyWithWhereWithoutAssigned_clientInput[]
   deleteMany?: Prisma.training_menusScalarWhereInput | Prisma.training_menusScalarWhereInput[]
 }
 
-export type training_menusUncheckedUpdateManyWithoutCoachNestedInput = {
-  create?: Prisma.XOR<Prisma.training_menusCreateWithoutCoachInput, Prisma.training_menusUncheckedCreateWithoutCoachInput> | Prisma.training_menusCreateWithoutCoachInput[] | Prisma.training_menusUncheckedCreateWithoutCoachInput[]
-  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutCoachInput | Prisma.training_menusCreateOrConnectWithoutCoachInput[]
-  upsert?: Prisma.training_menusUpsertWithWhereUniqueWithoutCoachInput | Prisma.training_menusUpsertWithWhereUniqueWithoutCoachInput[]
-  createMany?: Prisma.training_menusCreateManyCoachInputEnvelope
+export type training_menusUncheckedUpdateManyWithoutAuthorNestedInput = {
+  create?: Prisma.XOR<Prisma.training_menusCreateWithoutAuthorInput, Prisma.training_menusUncheckedCreateWithoutAuthorInput> | Prisma.training_menusCreateWithoutAuthorInput[] | Prisma.training_menusUncheckedCreateWithoutAuthorInput[]
+  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutAuthorInput | Prisma.training_menusCreateOrConnectWithoutAuthorInput[]
+  upsert?: Prisma.training_menusUpsertWithWhereUniqueWithoutAuthorInput | Prisma.training_menusUpsertWithWhereUniqueWithoutAuthorInput[]
+  createMany?: Prisma.training_menusCreateManyAuthorInputEnvelope
   set?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   disconnect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   delete?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   connect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
-  update?: Prisma.training_menusUpdateWithWhereUniqueWithoutCoachInput | Prisma.training_menusUpdateWithWhereUniqueWithoutCoachInput[]
-  updateMany?: Prisma.training_menusUpdateManyWithWhereWithoutCoachInput | Prisma.training_menusUpdateManyWithWhereWithoutCoachInput[]
+  update?: Prisma.training_menusUpdateWithWhereUniqueWithoutAuthorInput | Prisma.training_menusUpdateWithWhereUniqueWithoutAuthorInput[]
+  updateMany?: Prisma.training_menusUpdateManyWithWhereWithoutAuthorInput | Prisma.training_menusUpdateManyWithWhereWithoutAuthorInput[]
   deleteMany?: Prisma.training_menusScalarWhereInput | Prisma.training_menusScalarWhereInput[]
 }
 
-export type training_menusUncheckedUpdateManyWithoutClientNestedInput = {
-  create?: Prisma.XOR<Prisma.training_menusCreateWithoutClientInput, Prisma.training_menusUncheckedCreateWithoutClientInput> | Prisma.training_menusCreateWithoutClientInput[] | Prisma.training_menusUncheckedCreateWithoutClientInput[]
-  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutClientInput | Prisma.training_menusCreateOrConnectWithoutClientInput[]
-  upsert?: Prisma.training_menusUpsertWithWhereUniqueWithoutClientInput | Prisma.training_menusUpsertWithWhereUniqueWithoutClientInput[]
-  createMany?: Prisma.training_menusCreateManyClientInputEnvelope
+export type training_menusUncheckedUpdateManyWithoutAssigned_clientNestedInput = {
+  create?: Prisma.XOR<Prisma.training_menusCreateWithoutAssigned_clientInput, Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput> | Prisma.training_menusCreateWithoutAssigned_clientInput[] | Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput[]
+  connectOrCreate?: Prisma.training_menusCreateOrConnectWithoutAssigned_clientInput | Prisma.training_menusCreateOrConnectWithoutAssigned_clientInput[]
+  upsert?: Prisma.training_menusUpsertWithWhereUniqueWithoutAssigned_clientInput | Prisma.training_menusUpsertWithWhereUniqueWithoutAssigned_clientInput[]
+  createMany?: Prisma.training_menusCreateManyAssigned_clientInputEnvelope
   set?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   disconnect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   delete?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
   connect?: Prisma.training_menusWhereUniqueInput | Prisma.training_menusWhereUniqueInput[]
-  update?: Prisma.training_menusUpdateWithWhereUniqueWithoutClientInput | Prisma.training_menusUpdateWithWhereUniqueWithoutClientInput[]
-  updateMany?: Prisma.training_menusUpdateManyWithWhereWithoutClientInput | Prisma.training_menusUpdateManyWithWhereWithoutClientInput[]
+  update?: Prisma.training_menusUpdateWithWhereUniqueWithoutAssigned_clientInput | Prisma.training_menusUpdateWithWhereUniqueWithoutAssigned_clientInput[]
+  updateMany?: Prisma.training_menusUpdateManyWithWhereWithoutAssigned_clientInput | Prisma.training_menusUpdateManyWithWhereWithoutAssigned_clientInput[]
   deleteMany?: Prisma.training_menusScalarWhereInput | Prisma.training_menusScalarWhereInput[]
 }
 
@@ -500,74 +488,74 @@ export type training_menusUpdateOneWithoutUser_recapsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.training_menusUpdateToOneWithWhereWithoutUser_recapsInput, Prisma.training_menusUpdateWithoutUser_recapsInput>, Prisma.training_menusUncheckedUpdateWithoutUser_recapsInput>
 }
 
-export type training_menusCreateWithoutCoachInput = {
+export type training_menusCreateWithoutAuthorInput = {
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  client?: Prisma.UserCreateNestedOneWithoutAssignedMenusInput
+  assigned_client?: Prisma.usersCreateNestedOneWithoutAssigned_menusInput
   user_recaps?: Prisma.user_recapsCreateNestedManyWithoutTraining_menusInput
 }
 
-export type training_menusUncheckedCreateWithoutCoachInput = {
+export type training_menusUncheckedCreateWithoutAuthorInput = {
   id?: number
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  clientId?: number | null
+  client_id?: string | null
   user_recaps?: Prisma.user_recapsUncheckedCreateNestedManyWithoutTraining_menusInput
 }
 
-export type training_menusCreateOrConnectWithoutCoachInput = {
+export type training_menusCreateOrConnectWithoutAuthorInput = {
   where: Prisma.training_menusWhereUniqueInput
-  create: Prisma.XOR<Prisma.training_menusCreateWithoutCoachInput, Prisma.training_menusUncheckedCreateWithoutCoachInput>
+  create: Prisma.XOR<Prisma.training_menusCreateWithoutAuthorInput, Prisma.training_menusUncheckedCreateWithoutAuthorInput>
 }
 
-export type training_menusCreateManyCoachInputEnvelope = {
-  data: Prisma.training_menusCreateManyCoachInput | Prisma.training_menusCreateManyCoachInput[]
+export type training_menusCreateManyAuthorInputEnvelope = {
+  data: Prisma.training_menusCreateManyAuthorInput | Prisma.training_menusCreateManyAuthorInput[]
   skipDuplicates?: boolean
 }
 
-export type training_menusCreateWithoutClientInput = {
+export type training_menusCreateWithoutAssigned_clientInput = {
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  coach?: Prisma.UserCreateNestedOneWithoutCreatedMenusInput
+  author?: Prisma.usersCreateNestedOneWithoutCreated_menusInput
   user_recaps?: Prisma.user_recapsCreateNestedManyWithoutTraining_menusInput
 }
 
-export type training_menusUncheckedCreateWithoutClientInput = {
+export type training_menusUncheckedCreateWithoutAssigned_clientInput = {
   id?: number
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  coachId?: number | null
+  author_id?: string | null
   user_recaps?: Prisma.user_recapsUncheckedCreateNestedManyWithoutTraining_menusInput
 }
 
-export type training_menusCreateOrConnectWithoutClientInput = {
+export type training_menusCreateOrConnectWithoutAssigned_clientInput = {
   where: Prisma.training_menusWhereUniqueInput
-  create: Prisma.XOR<Prisma.training_menusCreateWithoutClientInput, Prisma.training_menusUncheckedCreateWithoutClientInput>
+  create: Prisma.XOR<Prisma.training_menusCreateWithoutAssigned_clientInput, Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput>
 }
 
-export type training_menusCreateManyClientInputEnvelope = {
-  data: Prisma.training_menusCreateManyClientInput | Prisma.training_menusCreateManyClientInput[]
+export type training_menusCreateManyAssigned_clientInputEnvelope = {
+  data: Prisma.training_menusCreateManyAssigned_clientInput | Prisma.training_menusCreateManyAssigned_clientInput[]
   skipDuplicates?: boolean
 }
 
-export type training_menusUpsertWithWhereUniqueWithoutCoachInput = {
+export type training_menusUpsertWithWhereUniqueWithoutAuthorInput = {
   where: Prisma.training_menusWhereUniqueInput
-  update: Prisma.XOR<Prisma.training_menusUpdateWithoutCoachInput, Prisma.training_menusUncheckedUpdateWithoutCoachInput>
-  create: Prisma.XOR<Prisma.training_menusCreateWithoutCoachInput, Prisma.training_menusUncheckedCreateWithoutCoachInput>
+  update: Prisma.XOR<Prisma.training_menusUpdateWithoutAuthorInput, Prisma.training_menusUncheckedUpdateWithoutAuthorInput>
+  create: Prisma.XOR<Prisma.training_menusCreateWithoutAuthorInput, Prisma.training_menusUncheckedCreateWithoutAuthorInput>
 }
 
-export type training_menusUpdateWithWhereUniqueWithoutCoachInput = {
+export type training_menusUpdateWithWhereUniqueWithoutAuthorInput = {
   where: Prisma.training_menusWhereUniqueInput
-  data: Prisma.XOR<Prisma.training_menusUpdateWithoutCoachInput, Prisma.training_menusUncheckedUpdateWithoutCoachInput>
+  data: Prisma.XOR<Prisma.training_menusUpdateWithoutAuthorInput, Prisma.training_menusUncheckedUpdateWithoutAuthorInput>
 }
 
-export type training_menusUpdateManyWithWhereWithoutCoachInput = {
+export type training_menusUpdateManyWithWhereWithoutAuthorInput = {
   where: Prisma.training_menusScalarWhereInput
-  data: Prisma.XOR<Prisma.training_menusUpdateManyMutationInput, Prisma.training_menusUncheckedUpdateManyWithoutCoachInput>
+  data: Prisma.XOR<Prisma.training_menusUpdateManyMutationInput, Prisma.training_menusUncheckedUpdateManyWithoutAuthorInput>
 }
 
 export type training_menusScalarWhereInput = {
@@ -578,32 +566,32 @@ export type training_menusScalarWhereInput = {
   name?: Prisma.StringNullableFilter<"training_menus"> | string | null
   exercises?: Prisma.JsonNullableFilter<"training_menus">
   created_at?: Prisma.DateTimeNullableFilter<"training_menus"> | Date | string | null
-  coachId?: Prisma.IntNullableFilter<"training_menus"> | number | null
-  clientId?: Prisma.IntNullableFilter<"training_menus"> | number | null
+  author_id?: Prisma.StringNullableFilter<"training_menus"> | string | null
+  client_id?: Prisma.StringNullableFilter<"training_menus"> | string | null
 }
 
-export type training_menusUpsertWithWhereUniqueWithoutClientInput = {
+export type training_menusUpsertWithWhereUniqueWithoutAssigned_clientInput = {
   where: Prisma.training_menusWhereUniqueInput
-  update: Prisma.XOR<Prisma.training_menusUpdateWithoutClientInput, Prisma.training_menusUncheckedUpdateWithoutClientInput>
-  create: Prisma.XOR<Prisma.training_menusCreateWithoutClientInput, Prisma.training_menusUncheckedCreateWithoutClientInput>
+  update: Prisma.XOR<Prisma.training_menusUpdateWithoutAssigned_clientInput, Prisma.training_menusUncheckedUpdateWithoutAssigned_clientInput>
+  create: Prisma.XOR<Prisma.training_menusCreateWithoutAssigned_clientInput, Prisma.training_menusUncheckedCreateWithoutAssigned_clientInput>
 }
 
-export type training_menusUpdateWithWhereUniqueWithoutClientInput = {
+export type training_menusUpdateWithWhereUniqueWithoutAssigned_clientInput = {
   where: Prisma.training_menusWhereUniqueInput
-  data: Prisma.XOR<Prisma.training_menusUpdateWithoutClientInput, Prisma.training_menusUncheckedUpdateWithoutClientInput>
+  data: Prisma.XOR<Prisma.training_menusUpdateWithoutAssigned_clientInput, Prisma.training_menusUncheckedUpdateWithoutAssigned_clientInput>
 }
 
-export type training_menusUpdateManyWithWhereWithoutClientInput = {
+export type training_menusUpdateManyWithWhereWithoutAssigned_clientInput = {
   where: Prisma.training_menusScalarWhereInput
-  data: Prisma.XOR<Prisma.training_menusUpdateManyMutationInput, Prisma.training_menusUncheckedUpdateManyWithoutClientInput>
+  data: Prisma.XOR<Prisma.training_menusUpdateManyMutationInput, Prisma.training_menusUncheckedUpdateManyWithoutAssigned_clientInput>
 }
 
 export type training_menusCreateWithoutUser_recapsInput = {
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  coach?: Prisma.UserCreateNestedOneWithoutCreatedMenusInput
-  client?: Prisma.UserCreateNestedOneWithoutAssignedMenusInput
+  author?: Prisma.usersCreateNestedOneWithoutCreated_menusInput
+  assigned_client?: Prisma.usersCreateNestedOneWithoutAssigned_menusInput
 }
 
 export type training_menusUncheckedCreateWithoutUser_recapsInput = {
@@ -611,8 +599,8 @@ export type training_menusUncheckedCreateWithoutUser_recapsInput = {
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  coachId?: number | null
-  clientId?: number | null
+  author_id?: string | null
+  client_id?: string | null
 }
 
 export type training_menusCreateOrConnectWithoutUser_recapsInput = {
@@ -635,8 +623,8 @@ export type training_menusUpdateWithoutUser_recapsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  coach?: Prisma.UserUpdateOneWithoutCreatedMenusNestedInput
-  client?: Prisma.UserUpdateOneWithoutAssignedMenusNestedInput
+  author?: Prisma.usersUpdateOneWithoutCreated_menusNestedInput
+  assigned_client?: Prisma.usersUpdateOneWithoutAssigned_menusNestedInput
 }
 
 export type training_menusUncheckedUpdateWithoutUser_recapsInput = {
@@ -644,74 +632,74 @@ export type training_menusUncheckedUpdateWithoutUser_recapsInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  coachId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  clientId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  author_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  client_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
-export type training_menusCreateManyCoachInput = {
+export type training_menusCreateManyAuthorInput = {
   id?: number
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  clientId?: number | null
+  client_id?: string | null
 }
 
-export type training_menusCreateManyClientInput = {
+export type training_menusCreateManyAssigned_clientInput = {
   id?: number
   name?: string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string | null
-  coachId?: number | null
+  author_id?: string | null
 }
 
-export type training_menusUpdateWithoutCoachInput = {
+export type training_menusUpdateWithoutAuthorInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  client?: Prisma.UserUpdateOneWithoutAssignedMenusNestedInput
+  assigned_client?: Prisma.usersUpdateOneWithoutAssigned_menusNestedInput
   user_recaps?: Prisma.user_recapsUpdateManyWithoutTraining_menusNestedInput
 }
 
-export type training_menusUncheckedUpdateWithoutCoachInput = {
+export type training_menusUncheckedUpdateWithoutAuthorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  clientId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  client_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_recaps?: Prisma.user_recapsUncheckedUpdateManyWithoutTraining_menusNestedInput
 }
 
-export type training_menusUncheckedUpdateManyWithoutCoachInput = {
+export type training_menusUncheckedUpdateManyWithoutAuthorInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  clientId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  client_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
-export type training_menusUpdateWithoutClientInput = {
+export type training_menusUpdateWithoutAssigned_clientInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  coach?: Prisma.UserUpdateOneWithoutCreatedMenusNestedInput
+  author?: Prisma.usersUpdateOneWithoutCreated_menusNestedInput
   user_recaps?: Prisma.user_recapsUpdateManyWithoutTraining_menusNestedInput
 }
 
-export type training_menusUncheckedUpdateWithoutClientInput = {
+export type training_menusUncheckedUpdateWithoutAssigned_clientInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  coachId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  author_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_recaps?: Prisma.user_recapsUncheckedUpdateManyWithoutTraining_menusNestedInput
 }
 
-export type training_menusUncheckedUpdateManyWithoutClientInput = {
+export type training_menusUncheckedUpdateManyWithoutAssigned_clientInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   exercises?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  coachId?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  author_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -750,10 +738,10 @@ export type training_menusSelect<ExtArgs extends runtime.Types.Extensions.Intern
   name?: boolean
   exercises?: boolean
   created_at?: boolean
-  coachId?: boolean
-  clientId?: boolean
-  coach?: boolean | Prisma.training_menus$coachArgs<ExtArgs>
-  client?: boolean | Prisma.training_menus$clientArgs<ExtArgs>
+  author_id?: boolean
+  client_id?: boolean
+  author?: boolean | Prisma.training_menus$authorArgs<ExtArgs>
+  assigned_client?: boolean | Prisma.training_menus$assigned_clientArgs<ExtArgs>
   user_recaps?: boolean | Prisma.training_menus$user_recapsArgs<ExtArgs>
   _count?: boolean | Prisma.Training_menusCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["training_menus"]>
@@ -763,10 +751,10 @@ export type training_menusSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   name?: boolean
   exercises?: boolean
   created_at?: boolean
-  coachId?: boolean
-  clientId?: boolean
-  coach?: boolean | Prisma.training_menus$coachArgs<ExtArgs>
-  client?: boolean | Prisma.training_menus$clientArgs<ExtArgs>
+  author_id?: boolean
+  client_id?: boolean
+  author?: boolean | Prisma.training_menus$authorArgs<ExtArgs>
+  assigned_client?: boolean | Prisma.training_menus$assigned_clientArgs<ExtArgs>
 }, ExtArgs["result"]["training_menus"]>
 
 export type training_menusSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -774,10 +762,10 @@ export type training_menusSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   name?: boolean
   exercises?: boolean
   created_at?: boolean
-  coachId?: boolean
-  clientId?: boolean
-  coach?: boolean | Prisma.training_menus$coachArgs<ExtArgs>
-  client?: boolean | Prisma.training_menus$clientArgs<ExtArgs>
+  author_id?: boolean
+  client_id?: boolean
+  author?: boolean | Prisma.training_menus$authorArgs<ExtArgs>
+  assigned_client?: boolean | Prisma.training_menus$assigned_clientArgs<ExtArgs>
 }, ExtArgs["result"]["training_menus"]>
 
 export type training_menusSelectScalar = {
@@ -785,31 +773,31 @@ export type training_menusSelectScalar = {
   name?: boolean
   exercises?: boolean
   created_at?: boolean
-  coachId?: boolean
-  clientId?: boolean
+  author_id?: boolean
+  client_id?: boolean
 }
 
-export type training_menusOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "exercises" | "created_at" | "coachId" | "clientId", ExtArgs["result"]["training_menus"]>
+export type training_menusOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "exercises" | "created_at" | "author_id" | "client_id", ExtArgs["result"]["training_menus"]>
 export type training_menusInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  coach?: boolean | Prisma.training_menus$coachArgs<ExtArgs>
-  client?: boolean | Prisma.training_menus$clientArgs<ExtArgs>
+  author?: boolean | Prisma.training_menus$authorArgs<ExtArgs>
+  assigned_client?: boolean | Prisma.training_menus$assigned_clientArgs<ExtArgs>
   user_recaps?: boolean | Prisma.training_menus$user_recapsArgs<ExtArgs>
   _count?: boolean | Prisma.Training_menusCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type training_menusIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  coach?: boolean | Prisma.training_menus$coachArgs<ExtArgs>
-  client?: boolean | Prisma.training_menus$clientArgs<ExtArgs>
+  author?: boolean | Prisma.training_menus$authorArgs<ExtArgs>
+  assigned_client?: boolean | Prisma.training_menus$assigned_clientArgs<ExtArgs>
 }
 export type training_menusIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  coach?: boolean | Prisma.training_menus$coachArgs<ExtArgs>
-  client?: boolean | Prisma.training_menus$clientArgs<ExtArgs>
+  author?: boolean | Prisma.training_menus$authorArgs<ExtArgs>
+  assigned_client?: boolean | Prisma.training_menus$assigned_clientArgs<ExtArgs>
 }
 
 export type $training_menusPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "training_menus"
   objects: {
-    coach: Prisma.$UserPayload<ExtArgs> | null
-    client: Prisma.$UserPayload<ExtArgs> | null
+    author: Prisma.$usersPayload<ExtArgs> | null
+    assigned_client: Prisma.$usersPayload<ExtArgs> | null
     user_recaps: Prisma.$user_recapsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -817,8 +805,8 @@ export type $training_menusPayload<ExtArgs extends runtime.Types.Extensions.Inte
     name: string | null
     exercises: runtime.JsonValue | null
     created_at: Date | null
-    coachId: number | null
-    clientId: number | null
+    author_id: string | null
+    client_id: string | null
   }, ExtArgs["result"]["training_menus"]>
   composites: {}
 }
@@ -1213,8 +1201,8 @@ readonly fields: training_menusFieldRefs;
  */
 export interface Prisma__training_menusClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  coach<T extends Prisma.training_menus$coachArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.training_menus$coachArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  client<T extends Prisma.training_menus$clientArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.training_menus$clientArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  author<T extends Prisma.training_menus$authorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.training_menus$authorArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  assigned_client<T extends Prisma.training_menus$assigned_clientArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.training_menus$assigned_clientArgs<ExtArgs>>): Prisma.Prisma__usersClient<runtime.Types.Result.GetResult<Prisma.$usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   user_recaps<T extends Prisma.training_menus$user_recapsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.training_menus$user_recapsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$user_recapsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1249,8 +1237,8 @@ export interface training_menusFieldRefs {
   readonly name: Prisma.FieldRef<"training_menus", 'String'>
   readonly exercises: Prisma.FieldRef<"training_menus", 'Json'>
   readonly created_at: Prisma.FieldRef<"training_menus", 'DateTime'>
-  readonly coachId: Prisma.FieldRef<"training_menus", 'Int'>
-  readonly clientId: Prisma.FieldRef<"training_menus", 'Int'>
+  readonly author_id: Prisma.FieldRef<"training_menus", 'String'>
+  readonly client_id: Prisma.FieldRef<"training_menus", 'String'>
 }
     
 
@@ -1647,41 +1635,41 @@ export type training_menusDeleteManyArgs<ExtArgs extends runtime.Types.Extension
 }
 
 /**
- * training_menus.coach
+ * training_menus.author
  */
-export type training_menus$coachArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type training_menus$authorArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the User
+   * Select specific fields to fetch from the users
    */
-  select?: Prisma.UserSelect<ExtArgs> | null
+  select?: Prisma.usersSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the User
+   * Omit specific fields from the users
    */
-  omit?: Prisma.UserOmit<ExtArgs> | null
+  omit?: Prisma.usersOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.UserInclude<ExtArgs> | null
-  where?: Prisma.UserWhereInput
+  include?: Prisma.usersInclude<ExtArgs> | null
+  where?: Prisma.usersWhereInput
 }
 
 /**
- * training_menus.client
+ * training_menus.assigned_client
  */
-export type training_menus$clientArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type training_menus$assigned_clientArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the User
+   * Select specific fields to fetch from the users
    */
-  select?: Prisma.UserSelect<ExtArgs> | null
+  select?: Prisma.usersSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the User
+   * Omit specific fields from the users
    */
-  omit?: Prisma.UserOmit<ExtArgs> | null
+  omit?: Prisma.usersOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.UserInclude<ExtArgs> | null
-  where?: Prisma.UserWhereInput
+  include?: Prisma.usersInclude<ExtArgs> | null
+  where?: Prisma.usersWhereInput
 }
 
 /**

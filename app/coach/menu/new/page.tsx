@@ -1,19 +1,49 @@
-
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth, AuthProvider } from '@/lib/auth';
 
-export default function CreateMenuPage() {
+interface Exercise {
+    name: string;
+    sets: number;
+    reps: number;
+    weight: number;
+    rest_time_seconds: number;
+}
+
+export default function CreateMenuPageWrap() {
+    return (
+        <AuthProvider>
+            <CreateMenuPage />
+        </AuthProvider>
+    );
+}
+
+function CreateMenuPage() {
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(false);
+    const { user } = useAuth();
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [menuName, setMenuName] = useState('');
-    const [exercises, setExercises] = useState([
+    const [exercises, setExercises] = useState<Exercise[]>([
         { name: 'Bicep Curl', sets: 3, reps: 10, weight: 10, rest_time_seconds: 0 }
     ]);
+    const [clients, setClients] = useState<any[]>([]);
+    const [selectedClient, setSelectedClient] = useState('');
+
+    useEffect(() => {
+        if (user) {
+            // Fetch clients
+            fetch(`/api/users?coachId=${encodeURIComponent(user.id)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setClients(data);
+                });
+        }
+    }, [user]);
 
     const handleExerciseChange = (index: number, field: string, value: any) => {
         const newExercises = [...exercises];
@@ -32,22 +62,44 @@ export default function CreateMenuPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
+        setIsSubmitting(true);
         try {
-            await fetch('/api/menus', {
+            // Validation
+            if (!selectedClient) {
+                alert("Please select a client to assign this menu to.");
+                setIsSubmitting(false);
+                return;
+            }
+            if (!user?.id) {
+                alert("User not authenticated.");
+                setIsSubmitting(false);
+                return;
+            }
+
+            const res = await fetch('/api/menus', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-user-id': user.id
+                },
                 body: JSON.stringify({
                     name: menuName,
-                    exercises: exercises
+                    exercises: exercises,
+                    client_id: selectedClient
                 })
             });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Failed to create menu');
+            }
+
             router.push('/coach/dashboard');
-        } catch (error) {
-            alert('Failed to create menu');
+        } catch (error: any) {
+            alert('Failed to create menu: ' + error.message);
             console.error(error);
         } finally {
-            setIsLoading(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -66,16 +118,32 @@ export default function CreateMenuPage() {
             </header>
 
             <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
-                <div className="bg-white border border-zinc-200 rounded-3xl p-8 shadow-sm">
-                    <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Menu Name</label>
-                    <input 
-                        type="text" 
-                        required 
-                        placeholder="e.g., Hypertrophy Phase 1"
-                        value={menuName}
-                        onChange={(e) => setMenuName(e.target.value)}
-                        className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-4 text-xl text-zinc-900 focus:outline-none focus:border-primary transition-colors placeholder:text-zinc-400"
-                    />
+                <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Program Name</label>
+                            <input 
+                                type="text" 
+                                placeholder="e.g. Morning Mobility" 
+                                value={menuName}
+                                onChange={(e) => setMenuName(e.target.value)}
+                                className="w-full text-xl font-bold border-b-2 border-zinc-100 focus:border-primary outline-none py-2 transition-colors placeholder:font-normal"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Assign To Client</label>
+                            <select
+                                value={selectedClient}
+                                onChange={(e) => setSelectedClient(e.target.value)}
+                                className="w-full text-lg border-b-2 border-zinc-100 focus:border-primary outline-none py-2 bg-transparent transition-colors"
+                            >
+                                <option value="" disabled>Select a client...</option>
+                                {clients.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name} ({c.id})</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="space-y-4">
@@ -177,10 +245,10 @@ export default function CreateMenuPage() {
                 <div className="pt-8 pb-32">
                     <button 
                         type="submit" 
-                        disabled={isLoading}
+                        disabled={isSubmitting}
                         className="w-full bg-primary hover:bg-primary/90 text-black font-black uppercase tracking-widest py-5 rounded-2xl shadow-[0_0_30px_-5px_var(--color-primary)] transform transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
                     >
-                        {isLoading ? (
+                        {isSubmitting ? (
                             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
@@ -192,5 +260,6 @@ export default function CreateMenuPage() {
                 </div>
             </form>
         </div>
+
     );
 }

@@ -15,118 +15,126 @@ export type FormValidationResult = {
     feedback: string[];
 };
 
-export interface ExerciseRule {
+// Expanded Configuration Interface to match Python
+export interface ExerciseConfig {
     name: string;
-    dynamic_joints: string[];
-    static_joints: string[];
-    critical_angles: { [key: string]: [number, number] };
-    form_rules: Array<(landmarks: Landmark[], angles: AnglesDict, side?: 'left' | 'right') => FormValidationResult>;
-    detection_condition: (angles: AnglesDict) => boolean;
-    state_machine: { start: string; peak: string };
-    bilateral: boolean;
-    get_dynamic_range: (joint: string, stage: string) => [number, number];
-}
-
-// --- Utilities ---
-
-export function calculateAngle(a: Landmark, b: Landmark, c: Landmark): number {
-    const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
-    let angle = Math.abs((radians * 180.0) / Math.PI);
-    if (angle > 180.0) angle = 360 - angle;
-    return angle;
-}
-
-export function computeDistance(a: {x:number, y:number}, b: {x:number, y:number}): number {
-    return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
-}
-
-function inRange(val: number, low: number, high: number): boolean {
-    return val >= low && val <= high;
-}
-
-export function detectStage(angle: number, upRange: [number, number], downRange: [number, number]): "up" | "down" | null {
-    if (inRange(angle, downRange[0], downRange[1])) return "down";
-    if (inRange(angle, upRange[0], upRange[1])) return "up";
-    return null;
-}
-
-// --- Validators (Direct Port) ---
-
-const validateBicepCurl = (landmarks: Landmark[], angles: AnglesDict, side: 'left' | 'right' = 'right'): FormValidationResult => {
-    const sideIdx = side === 'right' ? 12 : 11;
-    const shoulderIdx = sideIdx;
-    const elbowIdx = shoulderIdx + 2;
-    // hip is 23 (left) or 24 (right). 
-    // shoulder 11 -> hip 23. shoulder 12 -> hip 24.
-    const hipIdx = sideIdx + 12;
-
-    // Rule 1: Elbow stability
-    const elbowPos = landmarks[elbowIdx];
-    const hipPos = landmarks[hipIdx];
-    const dist = computeDistance(elbowPos, hipPos);
-
-    // Rule 2: Shoulder stability
-    const shoulderAngle = angles[`shoulder_${side === 'right' ? 'r' : 'l'}`] || 0;
-
-    const feedback: string[] = [];
-    if (dist >= 0.2) feedback.push(`${side} elbow drifting`);
-    if (Math.abs(shoulderAngle - 25) >= 20) feedback.push(`${side} shoulder moving`);
-
-    return { valid: feedback.length === 0, feedback };
-};
-
-const validateSquat = (landmarks: Landmark[], angles: AnglesDict): FormValidationResult => {
-    const hipL = angles['hip_l'] || 0;
-    const hipR = angles['hip_r'] || 0;
-    const avgHip = (hipL + hipR) / 2;
+    // Core Identification
+    detection: {
+        shoulder_static?: [number, number];
+        shoulder_down?: [number, number];
+        hip_static?: [number, number];
+    };
+    // Counting Logic
+    phase_type: 'start_down' | 'start_up'; 
+    dynamic_angles: {
+        [key: string]: [number, number]; // e.g., elbow_up: [0, 60]
+    };
+    // Scoring & Validation
+    static_angles?: { [key: string]: number }; // Ideal static angle
+    wrist_distance?: [number, number];
+    convex_hull?: {
+        up?: [number, number];
+        down?: [number, number];
+    };
     
-    // Knee valgus check (simplified x-diff checking)
-    const kneeL = landmarks[25].x;
-    const ankleL = landmarks[27].x;
-    const valgusL = Math.abs(kneeL - ankleL) > 0.05;
+    // Legacy support (optional)
+    form_rules?: Array<(landmarks: Landmark[], angles: AnglesDict, side?: 'left' | 'right') => FormValidationResult>;
+}
 
-    const feedback: string[] = [];
-    if (valgusL) feedback.push("Knee caving in");
-    if (avgHip < 160 && avgHip > 180) feedback.push("Back not neutral"); // logic matches python roughly
-
-    return { valid: feedback.length === 0, feedback };
-};
-
-// --- Rules Registry ---
-
-export const EXERCISE_RULES: { [key: string]: ExerciseRule } = {
+export const EXERCISE_CONFIGS: { [key: string]: ExerciseConfig } = {
     'bicep_curl': {
         name: "Bicep Curl",
-        dynamic_joints: ['elbow'],
-        static_joints: ['shoulder', 'hip'],
-        critical_angles: {
-            'elbow_up': [0, 45],
-            'elbow_down': [140, 180],
+        phase_type: 'start_down',
+        detection: { shoulder_static: [0, 30] },
+        dynamic_angles: {
+            'elbow_down': [120, 180],
+            'elbow_up': [0, 70],
+            'shoulder_down': [0, 30],
+            'shoulder_up': [0, 60]
         },
-        form_rules: [validateBicepCurl],
-        detection_condition: (a) => (a['shoulder_r'] < 40 && a['shoulder_l'] < 40 && (a['elbow_r'] > 140 || a['elbow_l'] > 140)),
-        state_machine: { start: 'down', peak: 'up' },
-        bilateral: true,
-        get_dynamic_range: function(joint, stage) {
-            return this.critical_angles[`${joint}_${stage}`] || [0,0];
-        }
+        static_angles: { 'shoulder_r': 15, 'shoulder_l': 15 },
+        wrist_distance: [0, 0.3],
+        convex_hull: { down: [0, 0.05], up: [0.05, 0.2] }
+    },
+    'hammer_curl': {
+        name: "Hammer Curl",
+        phase_type: 'start_down',
+        detection: { shoulder_static: [0, 30] },
+        dynamic_angles: {
+            'elbow_down': [120, 180],
+            'elbow_up': [0, 70], // Similar to bicep, maybe slightly different in 3D but same in 2D
+            'shoulder_down': [0, 30],
+            'shoulder_up': [0, 60]
+        },
+        static_angles: { 'shoulder_r': 15, 'shoulder_l': 15 },
+        wrist_distance: [0, 0.2], // Hammer curl usually keeps weights closer?
+        convex_hull: { down: [0, 0.05], up: [0.05, 0.2] }
+    },
+    'shoulder_press': { // Overhead Press
+        name: "Overhead Press",
+        phase_type: 'start_down', // Starts at shoulders, goes UP. Actually "Down" state is hands at shoulders. "Up" is hands in air.
+        detection: { shoulder_down: [60, 100] },
+        dynamic_angles: {
+            'elbow_down': [50, 100], // At shoulders
+            'elbow_up': [150, 180], // Extended up
+            'shoulder_down': [60, 100], // At shoulders
+            'shoulder_up': [140, 180] // Arms up
+        },
+        static_angles: { 'hip_r': 170, 'hip_l': 170 }, // Standing straight
+        convex_hull: { down: [0.05, 0.15], up: [0.15, 0.3] }
+    },
+    'lateral_raises': {
+        name: "Lateral Raises",
+        phase_type: 'start_down', // Arms at sides
+        detection: {},
+        dynamic_angles: {
+            'shoulder_down': [0, 30],
+            'shoulder_up': [80, 110], // T-pose
+            'elbow_down': [140, 180], // Straight arm
+            'elbow_up': [140, 180]  // Keep arms straight
+        },
+        static_angles: { 'elbow_r': 160, 'elbow_l': 160 },
+        convex_hull: { down: [0, 0.1], up: [0.2, 0.4] } // Wide hull when arms up
     },
     'squat': {
         name: "Squat",
-        dynamic_joints: ['hip', 'knee'],
-        static_joints: ['torso'],
-        critical_angles: {
-            'hip_up': [160, 180],
-            'hip_down': [40, 100],
+        phase_type: 'start_up', // Standing -> Squat -> Standing
+        detection: {},
+        dynamic_angles: {
+            'hip_up': [160, 180], // Standing
+            'hip_down': [50, 100], // Squat depth
             'knee_up': [160, 180],
-            'knee_down': [40, 100]
+            'knee_down': [50, 100]
         },
-        form_rules: [validateSquat],
-        detection_condition: (a) => (a['hip_l'] < 140 || a['knee_l'] < 140),
-        state_machine: { start: 'up', peak: 'down' },
-        bilateral: true,
-        get_dynamic_range: function(joint, stage) {
-            return this.critical_angles[`${joint}_${stage}`] || [0,0];
-        }
+        static_angles: { 'shoulder_r': 20, 'shoulder_l': 20 }, // Torso relatively upright
+        convex_hull: { up: [0.1, 0.2], down: [0.05, 0.15] } // Hull shrinks when squatting? Or stays same?
+    },
+    'deadlift': {
+        name: "Deadlift",
+        // Actually deadlift starts on floor. So 'start_down' (hips low) -> 'up' (hips high/standing).
+        phase_type: 'start_down', // Down (at floor) -> Up (Standing). Warning: Logic usually assumes "Down" means "Rest/Start".
+        detection: {},
+        dynamic_angles: {
+            'hip_down': [45, 100], // Hips flexed at bottom
+            'hip_up': [160, 180], // Hips extended at top
+            'knee_down': [60, 120], // Knees bent
+            'knee_up': [160, 180] // Knees locked
+        },
+        static_angles: { 'elbow_r': 170, 'elbow_l': 170 }, // Arms straight
+        convex_hull: { down: [0.1, 0.2], up: [0.1, 0.2] }
+    },
+    'lunges': {
+        name: "Lunges",
+        phase_type: 'start_up', // Standing -> Lunge -> Standing
+        detection: {},
+        dynamic_angles: {
+            'knee_up': [160, 180], // Standing
+            'knee_down': [70, 110], // Lunge depth
+            'hip_up': [160, 180],
+            'hip_down': [70, 110]
+        },
+        static_angles: {},
+        convex_hull: {}
     }
 };
+

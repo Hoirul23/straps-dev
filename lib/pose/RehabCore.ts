@@ -1,206 +1,107 @@
-
-import { Landmark, calculateAngle } from './ExerciseRules';
-
-
-// --- CONFIG FROM integrated.js ---
-type ExerciseConfig = {
-    name: string;
-    joints: { left: string[], right: string[] };
-    upThreshold: number;
-    downThreshold: number;
-    upCompare: '<' | '>';
-    downCompare: '<' | '>';
-    labelLeft?: string;
-    labelRight?: string;
-    trackBothSides: boolean;
-    specialLogic?: string;
-};
-
-// Full config ported from integrated.js
-export const EXERCISES: { [key: string]: ExerciseConfig } = {
-  bicep_curls: {
-    name: "Bicep Curl",
-    trackBothSides: true,
-    labelLeft: "Tangan Kiri",
-    labelRight: "Tangan Kanan",
-    upThreshold: 30, // Arm curled up
-    downThreshold: 160, // Arm extended down
-    downCompare: ">",
-    upCompare: "<",
-    joints: {
-      left: ['LEFT_SHOULDER', 'LEFT_ELBOW', 'LEFT_WRIST'],
-      right: ['RIGHT_SHOULDER', 'RIGHT_ELBOW', 'RIGHT_WRIST'],
-    },
-  },
-  knee_extension: {
-    name: "Knee Extension",
-    trackBothSides: true,
-    labelLeft: "Lutut Kiri",
-    labelRight: "Lutut Kanan",
-    upThreshold: 100, // Flexed
-    downThreshold: 155, // Extended
-    downCompare: ">",
-    upCompare: "<",
-    joints: {
-      left: ['LEFT_HIP', 'LEFT_KNEE', 'LEFT_ANKLE'],
-      right: ['RIGHT_HIP', 'RIGHT_KNEE', 'RIGHT_ANKLE'],
-    },
-  },
-  front_raise: {
-    name: "Front Raise",
-    trackBothSides: true,
-    labelLeft: "Bahu Kiri",
-    labelRight: "Bahu Kanan",
-    upThreshold: 30, // Down position
-    downThreshold: 80, // Up position
-    downCompare: ">",
-    upCompare: "<",
-    joints: {
-      left: ['LEFT_ELBOW', 'LEFT_SHOULDER', 'LEFT_HIP'],
-      right: ['RIGHT_ELBOW', 'RIGHT_SHOULDER', 'RIGHT_HIP'],
-    },
-  },
-  shoulder_flexion: {
-    name: "Shoulder Flexion",
-    trackBothSides: true,
-    labelLeft: "Bahu Kiri",
-    labelRight: "Bahu Kanan",
-    upThreshold: 30,
-    downThreshold: 110, // Higher than front raise
-    downCompare: ">",
-    upCompare: "<",
-    joints: {
-      left: ['LEFT_ELBOW', 'LEFT_SHOULDER', 'LEFT_HIP'],
-      right: ['RIGHT_ELBOW', 'RIGHT_SHOULDER', 'RIGHT_HIP'],
-    },
-  },
-  sit_to_stand: {
-    name: "Sit to Stand",
-    trackBothSides: false, // Single counter
-    labelLeft: "Sudut Lutut",
-    labelRight: "Sudut Pinggul",
-    upThreshold: 100, // Sitting
-    downThreshold: 155, // Standing
-    downCompare: ">",
-    upCompare: "<",
-    specialLogic: "sit_to_stand",
-    joints: {
-      left: ['LEFT_HIP', 'LEFT_KNEE', 'LEFT_ANKLE'], // Knee
-      right: ['LEFT_SHOULDER', 'LEFT_HIP', 'LEFT_KNEE'], // Hip (Same side for biomechanics)
-    },
-  },
-  shoulder_abduction: {
-    name: "Shoulder Abduction",
-    trackBothSides: true,
-    labelLeft: "Bahu Kiri",
-    labelRight: "Bahu Kanan",
-    upThreshold: 30,
-    downThreshold: 80,
-    downCompare: ">",
-    upCompare: "<",
-    joints: {
-      left: ['LEFT_WRIST', 'LEFT_SHOULDER', 'LEFT_HIP'],
-      right: ['RIGHT_WRIST', 'RIGHT_SHOULDER', 'RIGHT_HIP'],
-    },
-  },
-  hip_abduction: {
-    name: "Hip Abduction",
-    trackBothSides: true,
-    labelLeft: "Pinggul Kiri",
-    labelRight: "Pinggul Kanan",
-    upThreshold: 20,
-    downThreshold: 45,
-    downCompare: ">",
-    upCompare: "<",
-    joints: {
-      left: ['LEFT_ANKLE', 'LEFT_HIP', 'LEFT_SHOULDER'],
-      right: ['RIGHT_ANKLE', 'RIGHT_HIP', 'RIGHT_SHOULDER'],
-    },
-  },
-};
-
-type SideState = {
-    stage: 'up' | 'down' | null;
-    reps: number;
-    angle: number;
-};
+import { Landmark, EXERCISE_CONFIGS } from './ExerciseRules';
+import { RepetitionCounter, RepetitionSummary } from './RepetitionCounter';
+import { computeConvexHullArea, normalizeLandmarks, calculateAngle, computeDistance } from './MathUtils';
 
 export class RehabCore {
-    public states: { [key: string]: { left: SideState, right: SideState } } = {};
+    private counter: RepetitionCounter;
     
     constructor() {
-        // Init states
-        Object.keys(EXERCISES).forEach(key => {
-            this.states[key] = {
-                left: { stage: null, reps: 0, angle: 0 },
-                right: { stage: null, reps: 0, angle: 0 }
-            };
-        });
+        this.counter = new RepetitionCounter();
     }
 
-    public process(exerciseName: string, landmarks: Landmark[]) {
-        const config = EXERCISES[exerciseName];
+    public process(exerciseName: string, landmarks: Landmark[], frameTime: number = 0) {
+        // Map exercise name to config key (map web names to python keys)
+        // 'bicep_curls' -> 'bicep_curl' (Python logic key)
+        const KEY_MAP: {[key:string]: string} = {
+            'bicep_curls': 'bicep_curl',
+            'shoulder_press': 'shoulder_press',
+            'hammer_curls': 'hammer_curl',
+            'lateral_raises': 'lateral_raises',
+            'squats': 'squat',
+            'deadlifts': 'deadlift',
+            'lunges': 'lunges'
+        };
+        const configKey = KEY_MAP[exerciseName] || exerciseName;
+        const config = EXERCISE_CONFIGS[configKey];
+        
         if (!config || !landmarks || landmarks.length === 0) return null;
 
-        // Helper to get landmark by name
-        const LM_MAP: {[key: string]: number} = {
-            'LEFT_SHOULDER': 11, 'RIGHT_SHOULDER': 12,
-            'LEFT_ELBOW': 13, 'RIGHT_ELBOW': 14,
-            'LEFT_WRIST': 15, 'RIGHT_WRIST': 16,
-            'LEFT_HIP': 23, 'RIGHT_HIP': 24,
-            'LEFT_KNEE': 25, 'RIGHT_KNEE': 26,
-            'LEFT_ANKLE': 27, 'RIGHT_ANKLE': 28
+        this.counter.current_exercise = configKey;
+
+        // 1. Calculate All Required Angles
+        // Mediapipe Indices
+        const I = {
+            sho_l: 11, sho_r: 12,
+            elb_l: 13, elb_r: 14,
+            wri_l: 15, wri_r: 16,
+            hip_l: 23, hip_r: 24,
+            kne_l: 25, kne_r: 26,
+            ank_l: 27, ank_r: 28
+        };
+        const lm = (i: number) => landmarks[i];
+        const ang = (a: number, b: number, c: number) => calculateAngle(lm(a), lm(b), lm(c));
+
+        // Angles Dictionary
+        const angles: {[key: string]: number} = {
+            // Arms
+            'elbow_l': ang(I.sho_l, I.elb_l, I.wri_l),
+            'elbow_r': ang(I.sho_r, I.elb_r, I.wri_r),
+            'shoulder_l': ang(I.elb_l, I.sho_l, I.hip_l),
+            'shoulder_r': ang(I.elb_r, I.sho_r, I.hip_r),
+            // Legs
+            'hip_l': ang(I.sho_l, I.hip_l, I.kne_l),
+            'hip_r': ang(I.sho_r, I.hip_r, I.kne_r),
+            'knee_l': ang(I.hip_l, I.kne_l, I.ank_l),
+            'knee_r': ang(I.hip_r, I.kne_r, I.ank_r),
         };
 
-        const getAngle = (jointNames: string[]) => {
-            const [a, b, c] = jointNames.map(name => landmarks[LM_MAP[name]]);
-            if (!a || !b || !c) return 0;
-            return calculateAngle(a, b, c);
-        };
+        // Update Counter Buffers
+        this.counter.update_angles(
+            angles['elbow_r'], angles['elbow_l'],
+            angles['shoulder_r'], angles['shoulder_l']
+        );
 
-        // Process Left (Always processed as primary or left side)
-        const angleL = getAngle(config.joints.left);
-        this.updateSide(exerciseName, 'left', angleL, config);
+        // 2. Metrics
+        // Normalization
+        const normLandmarks = normalizeLandmarks(landmarks);
+        
+        // Convex Hull
+        // Convert to Point array for hull calc
+        const hullPoints = normLandmarks.map(l => ({x: l.x, y: l.y}));
+        const hullArea = computeConvexHullArea(hullPoints);
 
-        // Process Right (Processed if needed or for secondary metric like in sit_to_stand)
-        if (config.joints.right) {
-             const angleR = getAngle(config.joints.right);
-             this.updateSide(exerciseName, 'right', angleR, config);
-        }
+        // Wrist Distance
+        const wristDist = computeDistance(
+            {x: normLandmarks[I.wri_l].x, y: normLandmarks[I.wri_l].y},
+            {x: normLandmarks[I.wri_r].x, y: normLandmarks[I.wri_r].y}
+        );
 
+        // 3. Count
+        const [stageR, stageL, completed, summary] = this.counter.count_repetitions(
+            angles,
+            wristDist,
+            hullArea,
+            config,
+            frameTime || Date.now()
+        );
+
+        // 4. Return Standard Format
         return {
-            left: this.states[exerciseName].left,
-            right: this.states[exerciseName].right
+            left: { stage: stageL, reps: this.counter.get_raw_reps(configKey), angle: angles['elbow_l'] }, // Simplified angle ret for UI
+            right: { stage: stageR, reps: this.counter.get_raw_reps(configKey), angle: angles['elbow_r'] },
+            feedback: summary.feedback,
+            scores: summary.scores
         };
-    }
-
-    private updateSide(exName: string, side: 'left' | 'right', angle: number, config: ExerciseConfig) {
-        const state = this.states[exName][side];
-        state.angle = angle;
-
-        // Logic from integrated.js (simplified)
-        const isDown = config.downCompare === '>' ? angle > config.downThreshold : angle < config.downThreshold;
-        const isUp = config.upCompare === '<' ? angle < config.upThreshold : angle > config.upThreshold;
-
-        // State Machine
-        if (isDown) {
-            state.stage = 'down';
-        }
-        if (isUp && state.stage === 'down') {
-            state.stage = 'up';
-            // Only increment reps if we are tracking this side for reps
-            // For sit_to_stand (trackBothSides=false), usually we count on 'left' (primary) logic
-            if (config.trackBothSides || side === 'left') {
-                 state.reps += 1;
-            }
-        }
     }
     
     public getReps(exName: string) {
-        const s = this.states[exName];
-        if (!s) return 0;
-        const config = EXERCISES[exName];
-        if (!config.trackBothSides) return s.left.reps; // Only return primary counter
-        return s.left.reps + s.right.reps;
+        // Map back
+         const KEY_MAP: {[key:string]: string} = {
+            'bicep_curls': 'bicep_curl',
+            'shoulder_press': 'shoulder_press'
+        };
+        const configKey = KEY_MAP[exName] || exName;
+        return this.counter.get_raw_reps(configKey);
     }
 }
+

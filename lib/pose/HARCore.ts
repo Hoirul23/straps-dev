@@ -1,7 +1,8 @@
 
 import { XGBoostPredictor } from './XGBoostPredictor';
-import { Landmark } from './ExerciseRules';
+import { Landmark, EXERCISE_CONFIGS } from './ExerciseRules';
 import { RehabCore } from './RehabCore';
+import { calculateAngle } from './MathUtils';
 
 // Label Encoder mapping from python: Classes: ['berdiri' 'duduk' 'jatuh']
 const LABELS = ['Standing', 'Sitting', 'Fall Detected'];
@@ -21,10 +22,17 @@ export class HARCore {
         // Map UI name to internal config name if needed
         // For now assume direct match e.g. "Bicep Curl" -> "bicep_curls"
         // Simple normalizer
-        const key = name.toLowerCase().replace(' ', '_') + 's'; // simple hack 'Bicep Curl' -> 'bicep_curls'
-        // Actually let's just make the UI send the correct key or do better mapping.
-        // For this demo, let's just try to match keys in RehabCore.
-        this.currentExercise = Object.keys(this.rehab['states']).find(k => k.includes(name.toLowerCase().split(' ')[0])) || null;
+        const lowerName = name.toLowerCase();
+        
+        // Find matching key in EXERCISE_CONFIGS
+        // EXERCISE_CONFIGS keys are like 'bicep_curl', 'squat'
+        // UI names might be "Bicep Curl", "Squats"
+        const key = Object.keys(EXERCISE_CONFIGS).find(k => 
+            lowerName.includes(k.replace('_', ' ')) || 
+            k.replace('_', ' ').includes(lowerName.split(' ')[0])
+        );
+        
+        this.currentExercise = key || null;
     }
 
     public async process(landmarks: Landmark[]) {
@@ -53,6 +61,9 @@ export class HARCore {
                 const stateL = result.left.stage;
                 const stateR = result.right.stage;
                 feedback = `L: ${stateL || '-'} | R: ${stateR || '-'}`;
+                if (result.feedback && result.feedback.length > 0) {
+                     feedback += ` | ${result.feedback}`; // Add generic feedback
+                }
                 
                 debug = { angles: { l: result.left.angle, r: result.right.angle } };
             }
@@ -79,29 +90,25 @@ export class HARCore {
         // Helper to get landmark
         const getLm = (idx: number) => landmarks[idx];
         
-        // Helper to calculate angle (matching python logic)
-        const calculateAngle = (a: Landmark, b: Landmark, c: Landmark) => {
-             const rad = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
-             let angle = Math.abs(rad * 180.0 / Math.PI);
-             if (angle > 180.0) angle = 360 - angle;
-             return angle;
-        };
-        
+        // Helper to flatten {x,y} to point for calculateAngle
+        const pt = (lm: Landmark) => ({x: lm.x, y: lm.y});
+        const calcAng = (a: Landmark, b: Landmark, c: Landmark) => calculateAngle(pt(a), pt(b), pt(c));
+
         const derived: number[] = [];
 
         // Angles
         // 0: Left Elbow (11-13-15)
-        derived.push(calculateAngle(getLm(11), getLm(13), getLm(15)));
+        derived.push(calcAng(getLm(11), getLm(13), getLm(15)));
         // 1: Right Elbow (12-14-16)
-        derived.push(calculateAngle(getLm(12), getLm(14), getLm(16)));
+        derived.push(calcAng(getLm(12), getLm(14), getLm(16)));
         // 2: Left Hip (11-23-25)
-        derived.push(calculateAngle(getLm(11), getLm(23), getLm(25)));
+        derived.push(calcAng(getLm(11), getLm(23), getLm(25)));
         // 3: Right Hip (12-24-26)
-        derived.push(calculateAngle(getLm(12), getLm(24), getLm(26)));
+        derived.push(calcAng(getLm(12), getLm(24), getLm(26)));
         // 4: Left Knee (23-25-27)
-        derived.push(calculateAngle(getLm(23), getLm(25), getLm(27)));
+        derived.push(calcAng(getLm(23), getLm(25), getLm(27)));
         // 5: Right Knee (24-26-28)
-        derived.push(calculateAngle(getLm(24), getLm(26), getLm(28)));
+        derived.push(calcAng(getLm(24), getLm(26), getLm(28)));
 
         // Distances & Ratios
         const dist = (a: Landmark, b: Landmark) => Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
