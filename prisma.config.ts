@@ -11,6 +11,7 @@ export default defineConfig({
   datasource: {
     url: process.env["DATABASE_URL"]!,
   },
+  // @ts-expect-error - seed is valid at runtime but missing from type definition in this version
   seed: {
     command: "npx tsx prisma/seed.ts",
   },
