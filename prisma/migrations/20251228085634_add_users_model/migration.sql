@@ -1,9 +1,9 @@
 -- CreateTable
 CREATE TABLE "users" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "name" VARCHAR NOT NULL,
     "role" VARCHAR NOT NULL,
-    "coach_id" INTEGER,
+    "coach_id" TEXT,
     "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
@@ -16,6 +16,7 @@ CREATE TABLE "activity_logs" (
     "status" VARCHAR,
     "confidence" VARCHAR,
     "details" JSONB,
+    "user_id" TEXT,
 
     CONSTRAINT "activity_logs_pkey" PRIMARY KEY ("id")
 );
@@ -26,7 +27,8 @@ CREATE TABLE "training_menus" (
     "name" VARCHAR,
     "exercises" JSONB,
     "created_at" TIMESTAMP(6),
-    "author_id" INTEGER,
+    "author_id" TEXT,
+    "client_id" TEXT,
 
     CONSTRAINT "training_menus_pkey" PRIMARY KEY ("id")
 );
@@ -35,7 +37,7 @@ CREATE TABLE "training_menus" (
 CREATE TABLE "user_recaps" (
     "id" SERIAL NOT NULL,
     "menu_id" INTEGER,
-    "user_id" INTEGER,
+    "user_id" TEXT,
     "summary" JSONB,
     "completed_at" TIMESTAMP(6),
 
@@ -70,7 +72,13 @@ CREATE INDEX "ix_user_recaps_user_id" ON "user_recaps"("user_id");
 ALTER TABLE "users" ADD CONSTRAINT "users_coach_id_fkey" FOREIGN KEY ("coach_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "training_menus" ADD CONSTRAINT "training_menus_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "activity_logs" ADD CONSTRAINT "activity_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "training_menus" ADD CONSTRAINT "training_menus_author_id_fkey" FOREIGN KEY ("author_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "training_menus" ADD CONSTRAINT "training_menus_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "user_recaps" ADD CONSTRAINT "user_recaps_menu_id_fkey" FOREIGN KEY ("menu_id") REFERENCES "training_menus"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
