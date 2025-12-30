@@ -7,7 +7,11 @@ interface User {
   id: string; // Changed to string
   name: string;
   role: UserRole;
-  coach_id?: string | null; // Changed to string
+  coach_id?: string | null;
+  coach?: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 interface AuthContextType {

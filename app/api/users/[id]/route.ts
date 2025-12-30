@@ -11,7 +11,8 @@ export async function GET(
         const id = params.id; // String ID
 
         const user = await prisma.users.findUnique({
-            where: { id: id }
+            where: { id: id },
+            include: { coach: true }
         });
 
         if (!user) {

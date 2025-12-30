@@ -21,7 +21,20 @@ function ClientHub() {
         <div className="min-h-screen bg-background text-foreground p-8 font-sans selection:bg-primary/30 flex items-center justify-center">
             <div className="max-w-5xl w-full">
                 <header className="mb-16 text-center">
-                     <h1 className="text-5xl font-light tracking-widest text-zinc-800 mb-4">Hello, <span className="font-bold text-primary">{user?.name || 'Client'}</span>.</h1>
+                    <div className="flex flex-col items-center gap-2 mb-4">
+                        <h1 className="text-5xl font-light tracking-widest text-zinc-800">
+                             Hello, <span className="font-bold text-primary">{user?.name || 'Client'}</span>.
+                        </h1>
+                        <div className="flex items-center gap-4 text-sm text-zinc-400 mt-2 bg-zinc-50 px-4 py-2 rounded-full border border-zinc-100">
+                            <span>ID: <strong className="text-zinc-600">{user?.id}</strong></span>
+                            {user?.coach && (
+                                <>
+                                    <span className="w-1 h-1 bg-zinc-300 rounded-full"></span>
+                                    <span>Coach: <strong className="text-zinc-600">{user.coach.name}</strong></span>
+                                </>
+                            )}
+                        </div>
+                     </div>
                      <p className="text-zinc-500 text-lg">What would you like to focus on today?</p>
                 </header>
 

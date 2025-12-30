@@ -23,7 +23,7 @@ const config: runtime.GetPrismaClientConfig = {
       "value": "prisma-client"
     },
     "output": {
-      "value": "/home/amin/Projects/tf_mv/new_har/unified-platform/app/generated/client",
+      "value": "/home/amin/Projects/tf_mv/new_har/straps-dev/app/generated/client",
       "fromEnvVar": null
     },
     "config": {
@@ -37,7 +37,7 @@ const config: runtime.GetPrismaClientConfig = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/home/amin/Projects/tf_mv/new_har/unified-platform/prisma/schema.prisma",
+    "sourceFilePath": "/home/amin/Projects/tf_mv/new_har/straps-dev/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativePath": "../../../prisma",
