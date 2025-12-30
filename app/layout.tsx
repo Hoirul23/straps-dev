@@ -16,9 +16,7 @@ export const metadata: Metadata = {
   title: "STRAPS",
   description: "Smart Training & Rehab System",
   icons: {
-    icon: "/gym-svgrepo-com.svg", // Favicon
-    shortcut: "/gym-svgrepo-com.svg",
-    apple: "/gym-svgrepo-com.svg",
+    icon: [{ url: "/gym-svgrepo-com.svg", type: "image/svg+xml" }],
   },
 };
 
