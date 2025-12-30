@@ -288,7 +288,11 @@ function DashboardPage() {
                                         {new Date(menu.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="py-4 text-zinc-500 text-sm">
-                                        {Array.isArray(menu.exercises) ? menu.exercises.length : JSON.parse(menu.exercises as string).length} exercises
+                                        {(() => {
+                                            if (!menu.exercises) return 0;
+                                            if (Array.isArray(menu.exercises)) return menu.exercises.length;
+                                            try { return JSON.parse(menu.exercises as string).length; } catch { return 0; }
+                                        })()} exercises
                                     </td>
                                     <td className="py-4">
                                         <Link 
