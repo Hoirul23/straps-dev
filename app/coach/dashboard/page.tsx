@@ -23,7 +23,7 @@ function DashboardPage() {
         totalMenus: 0,
         totalSessions: 0, // All time
         sessionsToday: 0,
-        sessionTimeToday: '0m',
+
         recentMenus: [] as any[],
         recentRecaps: [] as any[],
         linkedClients: [] as any[]
@@ -62,22 +62,10 @@ function DashboardPage() {
                 const today = new Date().toDateString();
                 const todaysRecaps = recaps.filter((r: any) => new Date(r.completed_at).toDateString() === today);
                 
-                const timeTodayMinutes = todaysRecaps.reduce((acc: number, r: any) => {
-                    try {
-                        const summary = typeof r.summary === 'string' ? JSON.parse(r.summary) : r.summary;
-                        if (summary?.startTime && summary?.endTime) {
-                            const durationMs = new Date(summary.endTime).getTime() - new Date(summary.startTime).getTime();
-                            return acc + (durationMs / 1000 / 60);
-                        }
-                    } catch (e) { console.warn("Error parsing summary", e); }
-                    return acc;
-                }, 0);
-                
                 setStats({
                     totalMenus: menus.length,
                     totalSessions: recaps.length,
                     sessionsToday: todaysRecaps.length,
-                    sessionTimeToday: `${Math.round(timeTodayMinutes)}m`,
                     recentMenus: menus.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5),
                     recentRecaps: recaps.sort((a: any, b: any) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime()).slice(0, 5),
                     linkedClients: Array.isArray(clients) ? clients : []
@@ -155,7 +143,7 @@ function DashboardPage() {
             </header>
 
             <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 variants={container}
                 initial="hidden"
                 animate="show"
@@ -178,12 +166,7 @@ function DashboardPage() {
                     icon={<ShieldAlert className="text-green-400" />} 
                     variant={item}
                 />
-                <StatsCard 
-                    title="Session Time Today" 
-                    value={stats.sessionTimeToday} 
-                    icon={<Clock className="text-pink-400" />} 
-                    variant={item}
-                />
+
             </motion.div>
 
              <motion.div 
