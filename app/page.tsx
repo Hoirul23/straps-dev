@@ -114,9 +114,9 @@ function LandingPage() {
           {/* Logo / Header */}
           <div className="text-center mb-10">
             <h1 className="text-5xl font-light tracking-tight text-zinc-900 mb-2">
-              STRAPS<span className="font-bold text-primary">.AI</span>
+              STRAPS<span className="font-bold text-primary">-R</span>
             </h1>
-            <p className="text-zinc-500 text-lg tracking-wide">Unified Training Platform</p>
+            <p className="text-zinc-500 text-lg tracking-wide">Strength Training Pose Recognition and Patient Rehabilitation</p>
           </div>
 
           {/* Login / Register Card */}
