@@ -35,6 +35,11 @@ export class HARCore {
         this.currentExercise = key || null;
     }
 
+    public resetParams() {
+        this.rehab.reset();
+        // this.currentExercise = null; // Don't nullify exercise, just counters
+    }
+
     public async process(landmarks: Landmark[]) {
         if (!landmarks || landmarks.length === 0) return null;
 

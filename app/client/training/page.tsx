@@ -362,6 +362,19 @@ function TrainingPage() {
                     >
                         <RefreshCcw size={18} className="text-zinc-500" />
                     </button>
+                    <button 
+                        onClick={() => {
+                            // Reset Logic
+                            setCurrentSet(1);
+                            setRepsOffset(0);
+                            setStats(prev => ({ ...prev, reps: 0, status: 'Idle', feedback: 'Reset' }));
+                            if (harRef.current) harRef.current.resetParams();
+                            setIsResting(false);
+                        }}
+                        className="px-4 py-2 bg-red-50 text-red-600 rounded-full text-xs font-bold uppercase tracking-widest border border-red-100 hover:bg-red-100 transition-colors"
+                    >
+                        Reset
+                    </button>
                  </div>
             </header>
             

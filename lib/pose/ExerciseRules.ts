@@ -73,12 +73,12 @@ export const EXERCISE_CONFIGS: { [key: string]: ExerciseConfig } = {
     'shoulder_press': { // Overhead Press
         name: "Overhead Press",
         phase_type: 'start_down', // Starts at shoulders, goes UP. Actually "Down" state is hands at shoulders. "Up" is hands in air.
-        detection: { shoulder_down: [60, 100] },
+        detection: { shoulder_down: [50, 120] }, // Relaxed detection
         dynamic_angles: {
-            'elbow_down': [50, 100], // At shoulders
-            'elbow_up': [150, 180], // Extended up
-            'shoulder_down': [60, 100], // At shoulders
-            'shoulder_up': [140, 180] // Arms up
+            'elbow_down': [40, 120], // Relaxed bottom position (can stop at chin level)
+            'elbow_up': [130, 180], // Relaxed lockout (sometimes 140 is enough)
+            'shoulder_down': [50, 120], // Relaxed shoulder range
+            'shoulder_up': [130, 180] // Relaxed top range
         },
         static_angles: { 'hip_r': 170, 'hip_l': 170 }, // Standing straight
         convex_hull: { down: [0.05, 0.15], up: [0.15, 0.3] }

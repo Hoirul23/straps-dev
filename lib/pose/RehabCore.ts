@@ -9,9 +9,11 @@ export class RehabCore {
         this.counter = new RepetitionCounter();
     }
 
+    public reset() {
+        this.counter = new RepetitionCounter();
+    }
+
     public process(exerciseName: string, landmarks: Landmark[], frameTime: number = 0) {
-        // Map exercise name to config key (map web names to python keys)
-        // 'bicep_curls' -> 'bicep_curl' (Python logic key)
         const KEY_MAP: {[key:string]: string} = {
             'bicep_curls': 'bicep_curl',
             'shoulder_press': 'shoulder_press',
