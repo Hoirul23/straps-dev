@@ -410,51 +410,61 @@ function TrainingPage() {
                                 const isCompleted = idx < currentExerciseIndex;
                                 
                                 return (
-                                    <div 
-                                        key={idx}
-                                        className={`p-5 rounded-2xl transition-all border ${
-                                            isActive 
-                                                ? 'bg-blue-50 border-primary shadow-sm' 
-                                                : isCompleted 
-                                                    ? 'opacity-40 grayscale border-transparent' 
-                                                    : 'bg-white border-zinc-100'
-                                        }`}
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <div className={`text-lg tracking-wide ${isActive ? 'font-bold text-zinc-900' : 'text-zinc-500 font-medium'}`}>
-                                                    {ex.name}
-                                                </div>
-                                                <div className="text-[10px] text-secondary/70 uppercase tracking-widest mt-1">
-                                                    Target: {ex.reps} reps
-                                                </div>
+                                    <React.Fragment key={idx}>
+                                        {(idx === 0 || ex.set_index > (menu.exercises[idx - 1]?.set_index || 0)) && (
+                                            <div className="py-4 flex items-center gap-4">
+                                                <div className="h-px bg-zinc-200 flex-1"></div>
+                                                <span className="text-xs font-black text-zinc-400 uppercase tracking-[0.2em] bg-white px-2 rounded-lg">
+                                                    Round {ex.set_index || 1}
+                                                </span>
+                                                <div className="h-px bg-zinc-200 flex-1"></div>
                                             </div>
-                                            
-                                            {isActive && (
-                                                <div className="text-right">
-                                                    <div className="text-3xl font-light text-primary">
-                                                        {Math.max(0, stats.reps - repsOffset)}<span className="text-sm text-secondary/50 font-normal ml-1">/ {ex.reps}</span>
+                                        )}
+                                        <div 
+                                            className={`p-5 rounded-2xl transition-all border ${
+                                                isActive 
+                                                    ? 'bg-blue-50 border-primary shadow-sm' 
+                                                    : isCompleted 
+                                                        ? 'opacity-40 grayscale border-transparent' 
+                                                        : 'bg-white border-zinc-100'
+                                            }`}
+                                        >
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <div className={`text-lg tracking-wide ${isActive ? 'font-bold text-zinc-900' : 'text-zinc-500 font-medium'}`}>
+                                                        {ex.name}
                                                     </div>
-                                                    <div className="text-[10px] text-blue-300 uppercase tracking-wider font-bold animate-pulse">
-                                                        Set {ex.set_index || 1}/{ex.total_sets || 1}
+                                                    <div className="text-[10px] text-secondary/70 uppercase tracking-widest mt-1">
+                                                        Target: {ex.reps} reps • {ex.weight}kg
                                                     </div>
-                                                    {(ex as any).rest_time_seconds > 0 && (
-                                                        <div className="text-[10px] text-zinc-500 mt-1">
-                                                            Rest: {(ex as any).rest_time_seconds}s
+                                                </div>
+                                                
+                                                {isActive && (
+                                                    <div className="text-right">
+                                                        <div className="text-3xl font-light text-primary">
+                                                            {Math.max(0, stats.reps - repsOffset)}<span className="text-sm text-secondary/50 font-normal ml-1">/ {ex.reps}</span>
                                                         </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                            
-                                            {isCompleted && (
-                                                <div className="text-green-500">
-                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                    </svg>
-                                                </div>
-                                            )}
+                                                        <div className="text-[10px] text-blue-300 uppercase tracking-wider font-bold animate-pulse">
+                                                            Set {ex.set_index || 1}/{ex.total_sets || 1}
+                                                        </div>
+                                                        {(ex as any).rest_time_seconds > 0 && (
+                                                            <div className="text-[10px] text-zinc-500 mt-1">
+                                                                Rest: {(ex as any).rest_time_seconds}s
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                
+                                                {isCompleted && (
+                                                    <div className="text-green-500">
+                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    </React.Fragment>
                                 );
                             })}
                             
