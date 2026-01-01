@@ -2,17 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, Reorder } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Plus, Trash2, Save, ArrowLeft, Copy, Layers, GripVertical } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth, AuthProvider } from '@/lib/auth';
 
 interface ExerciseItem {
-    id: string; // Unique ID for UI keys
+    id: string; 
     name: string;
     reps: number;
     weight: number;
     rest_time_seconds: number;
+}
+
+interface RoundData {
+    id: string;
+    exercises: ExerciseItem[];
 }
 
 export default function CreateMenuPageWrap() {
@@ -29,9 +34,14 @@ function CreateMenuPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [menuName, setMenuName] = useState('');
     
-    // Playlist State
-    const [playlist, setPlaylist] = useState<ExerciseItem[]>([
-        { id: 'init-1', name: 'Squat', reps: 10, weight: 20, rest_time_seconds: 30 }
+    // Round-Based State
+    const [rounds, setRounds] = useState<RoundData[]>([
+        { 
+            id: 'round-1', 
+            exercises: [
+                { id: 'ex-1', name: 'Squat', reps: 10, weight: 20, rest_time_seconds: 30 }
+            ]
+        }
     ]);
     
     const [clients, setClients] = useState<any[]>([]);
@@ -49,54 +59,61 @@ function CreateMenuPage() {
 
     // --- Actions ---
 
-    const addExercise = () => {
-        setPlaylist([...playlist, {
+    const addRound = () => {
+        setRounds([...rounds, {
             id: Math.random().toString(36).substr(2, 9),
-            name: 'Bicep Curl',
-            reps: 10,
-            weight: 10,
-            rest_time_seconds: 30
+            exercises: []
         }]);
     };
 
-    const duplicateLast = () => {
-        if (playlist.length === 0) return;
-        const last = playlist[playlist.length - 1];
-        setPlaylist([...playlist, { ...last, id: Math.random().toString(36).substr(2, 9) }]);
+    const duplicateRound = (sourceIndex: number) => {
+        const source = rounds[sourceIndex];
+        const newExercises = source.exercises.map(ex => ({
+            ...ex,
+            id: Math.random().toString(36).substr(2, 9)
+        }));
+        
+        setRounds([...rounds, {
+            id: Math.random().toString(36).substr(2, 9),
+            exercises: newExercises
+        }]);
     };
 
-    const duplicateAll = () => {
-         // Clones the entire current list and appends it (Simulates "Add Next Round")
-         const newItems = playlist.map(item => ({
-             ...item,
-             id: Math.random().toString(36).substr(2, 9)
-         }));
-         setPlaylist([...playlist, ...newItems]);
+    const removeRound = (index: number) => {
+        setRounds(rounds.filter((_, i) => i !== index));
     };
 
-    const removeExercise = (index: number) => {
-        setPlaylist(playlist.filter((_, i) => i !== index));
+    const addExerciseToRound = (roundIndex: number) => {
+        const newRounds = [...rounds];
+        newRounds[roundIndex].exercises.push({
+            id: Math.random().toString(36).substr(2, 9),
+            name: 'Bicep Curl', 
+            reps: 10, 
+            weight: 10, 
+            rest_time_seconds: 30
+        });
+        setRounds(newRounds);
     };
 
-    const updateItem = (index: number, field: keyof ExerciseItem, value: any) => {
-        const newPlaylist = [...playlist];
-        newPlaylist[index] = { ...newPlaylist[index], [field]: value };
-        setPlaylist(newPlaylist);
+    const removeExerciseFromRound = (roundIndex: number, exIndex: number) => {
+        const newRounds = [...rounds];
+        newRounds[roundIndex].exercises = newRounds[roundIndex].exercises.filter((_, i) => i !== exIndex);
+        setRounds(newRounds);
     };
 
-    const moveItem = (fromIndex: number, direction: 'up' | 'down') => {
-        if (direction === 'up' && fromIndex === 0) return;
-        if (direction === 'down' && fromIndex === playlist.length - 1) return;
-
-        const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
-        const newPlaylist = [...playlist];
-        const [movedItem] = newPlaylist.splice(fromIndex, 1);
-        newPlaylist.splice(toIndex, 0, movedItem);
-        setPlaylist(newPlaylist);
+    const updateExercise = (roundIndex: number, exIndex: number, field: keyof ExerciseItem, value: any) => {
+        const newRounds = [...rounds];
+        newRounds[roundIndex].exercises[exIndex] = { 
+            ...newRounds[roundIndex].exercises[exIndex], 
+            [field]: value 
+        };
+        setRounds(newRounds);
     };
 
-    // --- Submit Logic ---
+    // --- Submit Logic (Flattening) ---
 
+    // We assume the user creates rounds sequentially: Set 1, Set 2.
+    // So distinct Sets of "Squat" will imply Set 1, Set 2 logic naturally in the list.
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -107,29 +124,33 @@ function CreateMenuPage() {
                 return;
             }
 
-            // ENRICHMENT ALGORITHM
-            // Calculate 'set_index' and 'total_sets' for each item based on name recurrence.
-            // Example: Squat, Bench, Squat -> Squat(1/2), Bench(1/1), Squat(2/2)
-            
+            // FLATTEN ROUNDS
+            const flatList: any[] = [];
             const counts: Record<string, number> = {};
             const totals: Record<string, number> = {};
 
-            // 1. Calculate Totals
-            playlist.forEach(item => {
-                totals[item.name] = (totals[item.name] || 0) + 1;
+            // 1. Calculate Totals (First Pass)
+            rounds.forEach(round => {
+                round.exercises.forEach(ex => {
+                    totals[ex.name] = (totals[ex.name] || 0) + 1;
+                });
             });
 
-            // 2. Assign Indices
-            const enrichedExercises = playlist.map(item => {
-                counts[item.name] = (counts[item.name] || 0) + 1;
-                return {
-                    name: item.name,
-                    reps: item.reps,
-                    weight: item.weight,
-                    rest_time_seconds: item.rest_time_seconds,
-                    set_index: counts[item.name],
-                    total_sets: totals[item.name]
-                };
+            // 2. Flatten and Assign Indices
+            rounds.forEach((round, roundIndex) => {
+                round.exercises.forEach(ex => {
+                    counts[ex.name] = (counts[ex.name] || 0) + 1;
+                    
+                    flatList.push({
+                        name: ex.name,
+                        reps: ex.reps,
+                        weight: ex.weight,
+                        rest_time_seconds: ex.rest_time_seconds,
+                        // This corresponds to "Which instance of Squat is this?" -> Set Number
+                        set_index: counts[ex.name], 
+                        total_sets: totals[ex.name]
+                    });
+                });
             });
 
             const res = await fetch('/api/menus', {
@@ -140,7 +161,7 @@ function CreateMenuPage() {
                 },
                 body: JSON.stringify({
                     name: menuName,
-                    exercises: enrichedExercises,
+                    exercises: flatList,
                     client_id: selectedClient
                 })
             });
@@ -162,27 +183,27 @@ function CreateMenuPage() {
 
     return (
         <div className="min-h-screen bg-background text-foreground p-8 font-sans pb-32">
-            <header className="max-w-3xl mx-auto mb-10 flex items-center gap-6">
-                <Link href="/coach/dashboard" className="p-3 bg-white hover:bg-zinc-100 rounded-full transition-colors border border-zinc-200">
+            <header className="max-w-4xl mx-auto mb-10 flex items-center gap-6">
+                <Link href="/coach/dashboard" className="p-3 bg-white hover:bg-zinc-100 rounded-full transition-colors border border-zinc-200 shadow-sm">
                     <ArrowLeft className="w-5 h-5 text-zinc-600" />
                 </Link>
                 <div>
                     <h1 className="text-3xl font-light text-zinc-900 tracking-wide">
-                        Program <span className="font-bold text-primary">Builder</span>
+                        Program <span className="font-bold text-primary">Composer</span>
                     </h1>
-                    <p className="text-zinc-500 text-sm mt-1">Design the workout flow step-by-step.</p>
+                    <p className="text-zinc-500 text-sm mt-1">Design training blocks set-by-set.</p>
                 </div>
             </header>
 
-            <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+            <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-8">
                  {/* Meta Info */}
-                 <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm mb-8">
+                 <div className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2">Program Name</label>
                             <input 
                                 type="text" 
-                                placeholder="e.g. Endurance Circuit" 
+                                placeholder="e.g. Hypertrophy A" 
                                 value={menuName}
                                 onChange={(e) => setMenuName(e.target.value)}
                                 className="w-full text-xl font-bold border-b-2 border-zinc-100 focus:border-primary outline-none py-2 transition-colors placeholder:font-normal"
@@ -204,131 +225,106 @@ function CreateMenuPage() {
                     </div>
                 </div>
 
-                {/* Playlist Builder */}
-                <div className="space-y-4">
-                    <div className="flex justify-between items-end mb-2 px-2">
-                        <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Workout Sequence ({playlist.length} steps)</h3>
-                        <div className="flex gap-2">
-                            <button 
-                                type="button" 
-                                onClick={duplicateAll}
-                                className="text-xs font-bold text-zinc-500 hover:text-zinc-800 bg-zinc-100 hover:bg-zinc-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-                            >
-                                <Copy className="w-3 h-3" /> Multiply Rounds
-                            </button>
-                        </div>
-                    </div>
-
-                    {playlist.map((item, index) => {
-                        // Calculate Set Number for UI
-                        const previousOccurrences = playlist.slice(0, index).filter(i => i.name === item.name).length;
-                        const setNumber = previousOccurrences + 1;
-
-                        return (
-                            <motion.div 
-                                key={item.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-white border border-zinc-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row items-center gap-4 group relative"
-                            >
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-zinc-200 group-hover:bg-primary transition-colors rounded-l-xl"></div>
-                                
-                                {/* Numbering */}
-                                <div className="w-8 h-8 rounded-full bg-zinc-50 text-zinc-400 font-bold text-xs flex items-center justify-center shrink-0">
-                                    {index + 1}
-                                </div>
-
-                            {/* Exercise Select */}
-                            <div className="flex-1 w-full">
-                                <div className="flex justify-between md:hidden mb-1">
-                                     <label className="text-[10px] font-bold text-zinc-400 uppercase">Exercise</label>
-                                     <span className="text-[10px] font-bold text-blue-500 uppercase bg-blue-50 px-2 rounded-md">Set {setNumber}</span>
-                                </div>
-                                <div className="relative">
-                                    <select 
-                                        value={item.name} 
-                                        onChange={(e) => updateItem(index, 'name', e.target.value)}
-                                        className="w-full bg-transparent font-bold text-zinc-900 focus:outline-none cursor-pointer appearance-none py-1"
-                                    >
-                                        {EXERCISE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                    </select>
-                                    <span className="hidden md:inline-block absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-500 uppercase bg-blue-50 px-2 rounded-md pointer-events-none">
-                                        Set {setNumber} (Auto)
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Parameters */}
-                            <div className="flex gap-2 w-full md:w-auto">
-                                <div className="flex-1">
-                                    <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-1 text-center">Reps</label>
-                                    <input 
-                                        type="number" 
-                                        value={isNaN(item.reps) ? '' : item.reps}
-                                        onChange={(e) => updateItem(index, 'reps', parseInt(e.target.value))}
-                                        className="w-full md:w-16 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1.5 text-center font-mono text-sm focus:border-primary outline-none"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-1 text-center">Kg</label>
-                                    <input 
-                                        type="number" 
-                                        value={isNaN(item.weight) ? '' : item.weight}
-                                        onChange={(e) => updateItem(index, 'weight', parseFloat(e.target.value))}
-                                        className="w-full md:w-16 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1.5 text-center font-mono text-sm focus:border-primary outline-none"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-1 text-center">Rest(s)</label>
-                                    <input 
-                                        type="number" 
-                                        value={isNaN(item.rest_time_seconds) ? '' : item.rest_time_seconds}
-                                        onChange={(e) => updateItem(index, 'rest_time_seconds', parseFloat(e.target.value))}
-                                        className="w-full md:w-16 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1.5 text-center font-mono text-sm focus:border-primary outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex items-center gap-1 border-l border-zinc-100 pl-4">
-                                <button 
-                                    type="button" 
-                                    onClick={() => moveItem(index, 'up')}
-                                    disabled={index === 0}
-                                    className="p-1.5 text-zinc-300 hover:text-zinc-600 disabled:opacity-30"
-                                >
-                                    ▲
-                                </button>
-                                <button 
-                                    type="button" 
-                                    onClick={() => moveItem(index, 'down')}
-                                    disabled={index === playlist.length - 1}
-                                    className="p-1.5 text-zinc-300 hover:text-zinc-600 disabled:opacity-30"
-                                >
-                                    ▼
-                                </button>
-                                <button 
-                                    type="button" 
-                                    onClick={() => removeExercise(index)}
-                                    className="p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-2"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </motion.div>
-                    );
-                    })}
-
-                    <div className="flex gap-4 pt-4">
-                        <button 
-                            type="button" 
-                            onClick={addExercise}
-                            className="flex-1 bg-white border border-dashed border-zinc-300 text-zinc-500 hover:text-primary hover:border-primary p-4 rounded-xl flex items-center justify-center gap-2 font-bold transition-all hover:bg-blue-50/50"
+                {/* Rounds */}
+                <div className="grid grid-cols-1 gap-6">
+                    {rounds.map((round, roundIndex) => (
+                        <motion.div 
+                            key={round.id}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-zinc-50 border border-zinc-200 rounded-3xl p-6 md:p-8 relative shadow-sm group/round"
                         >
-                            <Plus className="w-5 h-5" /> Add Next Exercise
-                        </button>
-                    </div>
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-black text-zinc-300 uppercase tracking-tighter flex items-center gap-2">
+                                    <span className="text-4xl text-zinc-200">#{(roundIndex + 1).toString().padStart(2, '0')}</span>
+                                    Set Container
+                                </h3>
+                                
+                                <button 
+                                    type="button" 
+                                    onClick={() => removeRound(roundIndex)}
+                                    disabled={rounds.length === 1}
+                                    className="p-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all disabled:opacity-0"
+                                >
+                                    <Trash2 className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Exercises in Round */}
+                            <div className="space-y-3">
+                                {round.exercises.map((ex, exIndex) => (
+                                    <div key={ex.id} className="bg-white p-4 rounded-xl shadow-sm border border-zinc-100 flex flex-col md:flex-row gap-4 items-center group/ex">
+                                        <div className="flex-1 w-full">
+                                            <label className="block text-[10px] font-bold text-zinc-300 uppercase mb-1 md:hidden">Exercise</label>
+                                            <select 
+                                                value={ex.name} 
+                                                onChange={(e) => updateExercise(roundIndex, exIndex, 'name', e.target.value)}
+                                                className="w-full bg-transparent font-bold text-zinc-900 focus:outline-none cursor-pointer"
+                                            >
+                                                {EXERCISE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                        </div>
+                                         <div className="flex gap-2 w-full md:w-auto">
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-zinc-300 uppercase mb-1 text-center">Reps</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={isNaN(ex.reps) ? '' : ex.reps}
+                                                    onChange={(e) => updateExercise(roundIndex, exIndex, 'reps', parseInt(e.target.value))}
+                                                    className="w-full md:w-16 bg-zinc-50 border border-zinc-100 rounded-lg px-2 py-1.5 text-center font-mono text-sm focus:border-primary outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-zinc-300 uppercase mb-1 text-center">Kg</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={isNaN(ex.weight) ? '' : ex.weight}
+                                                    onChange={(e) => updateExercise(roundIndex, exIndex, 'weight', parseFloat(e.target.value))}
+                                                    className="w-full md:w-16 bg-zinc-50 border border-zinc-100 rounded-lg px-2 py-1.5 text-center font-mono text-sm focus:border-primary outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-zinc-300 uppercase mb-1 text-center">Rest</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={isNaN(ex.rest_time_seconds) ? '' : ex.rest_time_seconds}
+                                                    onChange={(e) => updateExercise(roundIndex, exIndex, 'rest_time_seconds', parseFloat(e.target.value))}
+                                                    className="w-full md:w-16 bg-zinc-50 border border-zinc-100 rounded-lg px-2 py-1.5 text-center font-mono text-sm focus:border-primary outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => removeExerciseFromRound(roundIndex, exIndex)}
+                                            className="p-2 text-zinc-300 hover:text-red-500 transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                
+                                <button 
+                                    type="button" 
+                                    onClick={() => addExerciseToRound(roundIndex)}
+                                    className="w-full py-3 border-2 border-dashed border-zinc-200 rounded-xl text-zinc-400 hover:text-primary hover:border-primary hover:bg-blue-50/50 transition-all font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" /> Add Exercise
+                                </button>
+                            </div>
+
+                        </motion.div>
+                    ))}
                 </div>
+
+                <div className="flex justify-center py-6">
+                    <button 
+                        type="button" 
+                        onClick={() => duplicateRound(rounds.length - 1)}
+                        className="bg-zinc-900 hover:bg-black text-white px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+                    >
+                        <Copy className="w-4 h-4" /> DUPLICATE LAST SET
+                    </button>
+                 </div>
 
                 <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-lg border-t border-zinc-200 flex justify-center z-50">
                      <button 
