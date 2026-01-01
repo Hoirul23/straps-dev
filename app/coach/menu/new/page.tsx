@@ -332,7 +332,7 @@ function CreateMenuPage() {
                         onClick={addRound}
                         className="bg-zinc-100 hover:bg-zinc-200 text-zinc-800 px-8 py-3 rounded-full font-bold shadow-sm hover:scale-105 transition-all flex items-center gap-2"
                     >
-                        <Plus className="w-5 h-5" /> ADD NEW SET (EMPTY)
+                        <Plus className="w-5 h-5" /> ADD NEW SET
                     </button>
                  </div>
 
