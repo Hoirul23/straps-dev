@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { HARCore } from '@/lib/pose/HARCore';
 // Import from the official tasks-vision package
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
-import { RefreshCcw, ArrowLeft, PlayCircle, Repeat, Layers } from 'lucide-react';
+import { RefreshCcw, ArrowLeft, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
 
 import { AuthProvider, useAuth } from '@/lib/auth';
@@ -28,7 +28,7 @@ function TrainingPage() {
     const [menu, setMenu] = useState<any>(null);
     const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
     const [currentSet, setCurrentSet] = useState(1);
-    const [isCircuitMode, setIsCircuitMode] = useState(false); // Circuit Mode Toggle
+    // Standard Mode is now Circuit Mode (Interleaved Sets)
     const [repsOffset, setRepsOffset] = useState(0); // Offset for accumulated reps
     const [stats, setStats] = useState({ exercise: '', reps: 0, status: 'Idle', feedback: '' });
     const [isWorkoutComplete, setIsWorkoutComplete] = useState(false);
@@ -242,78 +242,41 @@ function TrainingPage() {
 
         if (isMatchingExercise) {
              if (currentRepsInSet >= currentTarget.reps) {
-                 // Set Complete
-                 const totalSets = currentTarget.sets || 1;
+                 // Circuit Logic: Default
+                 // Always move to next exercise index
+                 const nextExIdx = (currentExerciseIndex + 1) % menu.exercises.length;
                  const restTime = (currentTarget as any).rest_time_seconds || 0;
-                 console.log("Debug Logic:", { currentSet, totalSets, restTime, currentRepsInSet });
                  
-                 if (currentSet < totalSets) {
-                     // Move to Next Set
-                     setCurrentSet(prev => prev + 1);
-                     setRepsOffset(stats.reps); // New baseline
+                 if (nextExIdx === 0) {
+                     // Completed a full round (All exercises in list visited for this Set)
+                     const nextSet = currentSet + 1;
+                     // We use the maximum sets in the menu to define the circuit duration
+                     const totalRounds = Math.max(...menu.exercises.map((e:any) => e.sets || 1));
                      
-                     // Trigger Rest if configured
+                     if (nextSet > totalRounds) {
+                         finishWorkout();
+                     } else {
+                         // Start Next Round
+                         setCurrentSet(nextSet);
+                         setCurrentExerciseIndex(0);
+                         setRepsOffset(0);
+
+                         // Long Rest (Round Rest) - Could be different, but using exercise rest for now
+                         if (restTime > 0) {
+                             setIsResting(true);
+                             setRestTimer(restTime);
+                         }
+                     }
+                 } else {
+                     // Move to next station in the circuit
+                     setCurrentExerciseIndex(nextExIdx);
+                     setRepsOffset(0);
+                     
+                     // Short Rest (Between Stations)
                      if (restTime > 0) {
                          setIsResting(true);
                          setRestTimer(restTime);
                      }
-                 } else {
-                     // Exercise Complete
-                      if (isCircuitMode) {
-                          // Circuit Mode: Next Exercise, same Set (or Next Set if looped)
-                          const nextExIdx = (currentExerciseIndex + 1) % menu.exercises.length;
-                          
-                          if (nextExIdx === 0) {
-                             // Completed one full circuit round
-                             const nextSet = currentSet + 1;
-                             // Check if ANY exercise still has sets remaining? 
-                             // Simplified: We use the current exercise's "sets" as the "circuit rounds" count for now.
-                             // Ideally circuit rounds is global.
-                             const totalRounds = Math.max(...menu.exercises.map((e:any) => e.sets || 1));
-                             
-                             if (nextSet > totalRounds) {
-                                 finishWorkout();
-                             } else {
-                                 setCurrentSet(nextSet);
-                                 setCurrentExerciseIndex(0);
-                                 setRepsOffset(0);
-
-                                 // Circuit Rest (Big Rest)
-                                 // Default 60s or usage of rest_time from last exercise?
-                                 // Let's use a standard circuit rest or the last exercise's rest.
-                                 if (restTime > 0) {
-                                     setIsResting(true);
-                                     setRestTimer(restTime); 
-                                 }
-                             }
-                          } else {
-                              // Next Station in Circuit
-                              setCurrentExerciseIndex(nextExIdx);
-                              // We keep currentSet same for the loop
-                              setRepsOffset(0);
-                              
-                              // Station transition rest (usually short)
-                              if (restTime > 0) {
-                                  setIsResting(true);
-                                  setRestTimer(restTime);
-                              }
-                          }
-
-                      } else {
-                         // Sequential Mode (Standard)
-                         const nextIdx = currentExerciseIndex + 1;
-                         if (nextIdx < menu.exercises.length) {
-                             if (restTime > 0) {
-                                 setIsResting(true);
-                                 setRestTimer(restTime);
-                             }
-                             setCurrentExerciseIndex(nextIdx);
-                             setCurrentSet(1);
-                             setRepsOffset(0); 
-                         } else {
-                             finishWorkout();
-                         }
-                      }
                  }
              }
         }
@@ -396,14 +359,7 @@ function TrainingPage() {
                     >
                         <RefreshCcw size={18} className="text-zinc-500" />
                     </button>
-                    <button 
-                        onClick={() => setIsCircuitMode(!isCircuitMode)}
-                        className={`p-2 border rounded-full transition-colors shadow-sm flex items-center gap-2 px-4 ${isCircuitMode ? 'bg-purple-100 border-purple-300 text-purple-700' : 'bg-white border-zinc-200 text-zinc-500'}`}
-                        title="Toggle Circuit Mode"
-                    >
-                        {isCircuitMode ? <Layers size={18} /> : <Repeat size={18} />}
-                        <span className="text-xs font-bold uppercase">{isCircuitMode ? 'Circuit' : 'Normal'}</span>
-                    </button>
+
                     <button 
                         onClick={() => {
                             // Reset Logic
