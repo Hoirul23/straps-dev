@@ -240,14 +240,24 @@ function CreateMenuPage() {
                                     Set Container
                                 </h3>
                                 
-                                <button 
-                                    type="button" 
-                                    onClick={() => removeRound(roundIndex)}
-                                    disabled={rounds.length === 1}
-                                    className="p-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all disabled:opacity-0"
-                                >
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => duplicateRound(roundIndex)}
+                                        className="p-2 text-zinc-400 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"
+                                        title="Duplicate this Set"
+                                    >
+                                        <Copy className="w-5 h-5" />
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => removeRound(roundIndex)}
+                                        disabled={rounds.length === 1}
+                                        className="p-2 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all disabled:opacity-0"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Exercises in Round */}
@@ -319,10 +329,10 @@ function CreateMenuPage() {
                 <div className="flex justify-center py-6">
                     <button 
                         type="button" 
-                        onClick={() => duplicateRound(rounds.length - 1)}
-                        className="bg-zinc-900 hover:bg-black text-white px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+                        onClick={addRound}
+                        className="bg-zinc-100 hover:bg-zinc-200 text-zinc-800 px-8 py-3 rounded-full font-bold shadow-sm hover:scale-105 transition-all flex items-center gap-2"
                     >
-                        <Copy className="w-4 h-4" /> DUPLICATE LAST SET
+                        <Plus className="w-5 h-5" /> ADD NEW SET (EMPTY)
                     </button>
                  </div>
 
