@@ -236,8 +236,8 @@ function CreateMenuPage() {
                         >
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-xl font-black text-zinc-300 uppercase tracking-tighter flex items-center gap-2">
-                                    <span className="text-4xl text-zinc-200">#{(roundIndex + 1).toString().padStart(2, '0')}</span>
-                                    Set Container
+                                    <span className="text-4xl text-zinc-200">#{ (roundIndex + 1).toString().padStart(2, '0') }</span>
+                                    SET
                                 </h3>
                                 
                                 <div className="flex items-center gap-2">

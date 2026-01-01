@@ -415,7 +415,7 @@ function TrainingPage() {
                                             <div className="py-4 flex items-center gap-4">
                                                 <div className="h-px bg-zinc-200 flex-1"></div>
                                                 <span className="text-xs font-black text-zinc-400 uppercase tracking-[0.2em] bg-white px-2 rounded-lg">
-                                                    Round {ex.set_index || 1}
+                                                    SET {ex.set_index || 1}
                                                 </span>
                                                 <div className="h-px bg-zinc-200 flex-1"></div>
                                             </div>

@@ -122,10 +122,13 @@ export default function RecapDetailPage() {
                                         {idx + 1}
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-zinc-900">{ex.name}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-lg font-bold text-zinc-900">{ex.name}</h3>
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wide">
+                                                Set {ex.set_index || '?'}/{ex.total_sets || '?'}
+                                            </span>
+                                        </div>
                                         <div className="flex gap-2 text-xs font-medium uppercase tracking-wider text-zinc-400 mt-1">
-                                            <span>{ex.sets} Sets</span>
-                                            <span>•</span>
                                             <span>{ex.reps} Reps</span>
                                             <span>•</span>
                                             <span>{ex.weight} kg</span>
