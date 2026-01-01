@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { HARCore } from '@/lib/pose/HARCore';
 // Import from the official tasks-vision package
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
-import { RefreshCcw, ArrowLeft, PlayCircle } from 'lucide-react';
+import { RefreshCcw, ArrowLeft, PlayCircle, Repeat, Layers } from 'lucide-react';
 import Link from 'next/link';
 
 import { AuthProvider, useAuth } from '@/lib/auth';
@@ -28,6 +28,7 @@ function TrainingPage() {
     const [menu, setMenu] = useState<any>(null);
     const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
     const [currentSet, setCurrentSet] = useState(1);
+    const [isCircuitMode, setIsCircuitMode] = useState(false); // Circuit Mode Toggle
     const [repsOffset, setRepsOffset] = useState(0); // Offset for accumulated reps
     const [stats, setStats] = useState({ exercise: '', reps: 0, status: 'Idle', feedback: '' });
     const [isWorkoutComplete, setIsWorkoutComplete] = useState(false);
@@ -258,28 +259,61 @@ function TrainingPage() {
                      }
                  } else {
                      // Exercise Complete
-                     const nextIdx = currentExerciseIndex + 1;
-                     if (nextIdx < menu.exercises.length) {
-                         // Check if we should rest between exercises? Usually yes if configured.
-                         // But for now let's assume rest is per-set. 
-                         // If user wants rest between exercises, it's effectively a rest after the last set.
-                         if (restTime > 0) {
-                             setIsResting(true);
-                             setRestTimer(restTime);
-                             // Delay transition until rest ends? 
-                             // No, logic is trickier. Let's just transition immediately for now 
-                             // OR we can make a "Resting... Next: Squat" screen.
-                             // For simplicity: Rest applies triggers here, but we also change index.
-                             // Wait, if we change index, the 'restTime' might be confusing.
-                             // Let's keep it simple: Rest only WITHIN the exercise (between sets).
+                      if (isCircuitMode) {
+                          // Circuit Mode: Next Exercise, same Set (or Next Set if looped)
+                          const nextExIdx = (currentExerciseIndex + 1) % menu.exercises.length;
+                          
+                          if (nextExIdx === 0) {
+                             // Completed one full circuit round
+                             const nextSet = currentSet + 1;
+                             // Check if ANY exercise still has sets remaining? 
+                             // Simplified: We use the current exercise's "sets" as the "circuit rounds" count for now.
+                             // Ideally circuit rounds is global.
+                             const totalRounds = Math.max(...menu.exercises.map((e:any) => e.sets || 1));
+                             
+                             if (nextSet > totalRounds) {
+                                 finishWorkout();
+                             } else {
+                                 setCurrentSet(nextSet);
+                                 setCurrentExerciseIndex(0);
+                                 setRepsOffset(0);
+
+                                 // Circuit Rest (Big Rest)
+                                 // Default 60s or usage of rest_time from last exercise?
+                                 // Let's use a standard circuit rest or the last exercise's rest.
+                                 if (restTime > 0) {
+                                     setIsResting(true);
+                                     setRestTimer(restTime); 
+                                 }
+                             }
+                          } else {
+                              // Next Station in Circuit
+                              setCurrentExerciseIndex(nextExIdx);
+                              // We keep currentSet same for the loop
+                              setRepsOffset(0);
+                              
+                              // Station transition rest (usually short)
+                              if (restTime > 0) {
+                                  setIsResting(true);
+                                  setRestTimer(restTime);
+                              }
+                          }
+
+                      } else {
+                         // Sequential Mode (Standard)
+                         const nextIdx = currentExerciseIndex + 1;
+                         if (nextIdx < menu.exercises.length) {
+                             if (restTime > 0) {
+                                 setIsResting(true);
+                                 setRestTimer(restTime);
+                             }
+                             setCurrentExerciseIndex(nextIdx);
+                             setCurrentSet(1);
+                             setRepsOffset(0); 
+                         } else {
+                             finishWorkout();
                          }
-                         
-                         setCurrentExerciseIndex(nextIdx);
-                         setCurrentSet(1);
-                         setRepsOffset(0); 
-                     } else {
-                         finishWorkout();
-                     }
+                      }
                  }
              }
         }
@@ -361,6 +395,14 @@ function TrainingPage() {
                         title="Refresh Menu"
                     >
                         <RefreshCcw size={18} className="text-zinc-500" />
+                    </button>
+                    <button 
+                        onClick={() => setIsCircuitMode(!isCircuitMode)}
+                        className={`p-2 border rounded-full transition-colors shadow-sm flex items-center gap-2 px-4 ${isCircuitMode ? 'bg-purple-100 border-purple-300 text-purple-700' : 'bg-white border-zinc-200 text-zinc-500'}`}
+                        title="Toggle Circuit Mode"
+                    >
+                        {isCircuitMode ? <Layers size={18} /> : <Repeat size={18} />}
+                        <span className="text-xs font-bold uppercase">{isCircuitMode ? 'Circuit' : 'Normal'}</span>
                     </button>
                     <button 
                         onClick={() => {
