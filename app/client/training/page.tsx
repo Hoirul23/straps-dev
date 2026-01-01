@@ -27,8 +27,7 @@ function TrainingPage() {
     // Workflow State
     const [menu, setMenu] = useState<any>(null);
     const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
-    const [currentSet, setCurrentSet] = useState(1);
-    // Standard Mode is now Circuit Mode (Interleaved Sets)
+    // const [currentSet, setCurrentSet] = useState(1); // REMOVED: Linear Progression uses index only
     const [repsOffset, setRepsOffset] = useState(0); // Offset for accumulated reps
     const [stats, setStats] = useState({ exercise: '', reps: 0, status: 'Idle', feedback: '' });
     const [isWorkoutComplete, setIsWorkoutComplete] = useState(false);
@@ -69,8 +68,9 @@ function TrainingPage() {
                 const latest = data[0]; 
                 if (typeof latest.exercises === 'string') latest.exercises = JSON.parse(latest.exercises);
                 setMenu(latest);
+                setMenu(latest);
                 setCurrentExerciseIndex(0);
-                setCurrentSet(1);
+                // setCurrentSet(1);
                 setRepsOffset(0);
             }
         } catch (err) {
@@ -240,39 +240,17 @@ function TrainingPage() {
         
         const isMatchingExercise = stats.exercise && numberSafeMatch(stats.exercise, currentTarget.name);
 
-        if (isMatchingExercise) {
              if (currentRepsInSet >= currentTarget.reps) {
-                 // Circuit Logic: Default
-                 // Always move to next exercise index
-                 const nextExIdx = (currentExerciseIndex + 1) % menu.exercises.length;
+                 // Linear Logic: Next Exercise in List
+                 const nextExIdx = currentExerciseIndex + 1;
                  const restTime = (currentTarget as any).rest_time_seconds || 0;
                  
-                 if (nextExIdx === 0) {
-                     // Completed a full round (All exercises in list visited for this Set)
-                     const nextSet = currentSet + 1;
-                     // We use the maximum sets in the menu to define the circuit duration
-                     const totalRounds = Math.max(...menu.exercises.map((e:any) => e.sets || 1));
-                     
-                     if (nextSet > totalRounds) {
-                         finishWorkout();
-                     } else {
-                         // Start Next Round
-                         setCurrentSet(nextSet);
-                         setCurrentExerciseIndex(0);
-                         setRepsOffset(0);
-
-                         // Long Rest (Round Rest) - Could be different, but using exercise rest for now
-                         if (restTime > 0) {
-                             setIsResting(true);
-                             setRestTimer(restTime);
-                         }
-                     }
+                 if (nextExIdx >= menu.exercises.length) {
+                     finishWorkout();
                  } else {
-                     // Move to next station in the circuit
                      setCurrentExerciseIndex(nextExIdx);
                      setRepsOffset(0);
                      
-                     // Short Rest (Between Stations)
                      if (restTime > 0) {
                          setIsResting(true);
                          setRestTimer(restTime);
@@ -280,7 +258,7 @@ function TrainingPage() {
                  }
              }
         }
-    }, [stats.reps, stats.exercise, menu, currentExerciseIndex, currentSet, repsOffset]);
+    }, [stats.reps, stats.exercise, menu, currentExerciseIndex, repsOffset]);
 
     const numberSafeMatch = (a: string, b: string) => {
         return a.toLowerCase().includes(b.split(' ')[0].toLowerCase());
@@ -363,7 +341,7 @@ function TrainingPage() {
                     <button 
                         onClick={() => {
                             // Reset Logic
-                            setCurrentSet(1);
+                            // setCurrentSet(1);
                             setRepsOffset(0);
                             setStats(prev => ({ ...prev, reps: 0, status: 'Idle', feedback: 'Reset' }));
                             if (harRef.current) harRef.current.resetParams();
@@ -457,7 +435,7 @@ function TrainingPage() {
                                                         {Math.max(0, stats.reps - repsOffset)}<span className="text-sm text-secondary/50 font-normal ml-1">/ {ex.reps}</span>
                                                     </div>
                                                     <div className="text-[10px] text-blue-300 uppercase tracking-wider font-bold animate-pulse">
-                                                        Set {currentSet}/{ex.sets || 1}
+                                                        Set {ex.set_index || 1}/{ex.total_sets || 1}
                                                     </div>
                                                     {(ex as any).rest_time_seconds > 0 && (
                                                         <div className="text-[10px] text-zinc-500 mt-1">
