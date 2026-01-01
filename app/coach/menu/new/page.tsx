@@ -281,7 +281,7 @@ function CreateMenuPage() {
                                                 <td className="py-3 px-2">
                                                     <input 
                                                         type="number" 
-                                                        value={set.reps}
+                                                        value={isNaN(set.reps) ? '' : set.reps}
                                                         onChange={(e) => updateSet(groupIndex, setIndex, 'reps', parseInt(e.target.value))}
                                                         className="w-20 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1 text-center"
                                                     />
@@ -289,7 +289,7 @@ function CreateMenuPage() {
                                                 <td className="py-3 px-2">
                                                     <input 
                                                         type="number" 
-                                                        value={set.weight}
+                                                        value={isNaN(set.weight) ? '' : set.weight}
                                                         onChange={(e) => updateSet(groupIndex, setIndex, 'weight', parseFloat(e.target.value))}
                                                         className="w-20 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1 text-center"
                                                     />
@@ -297,7 +297,7 @@ function CreateMenuPage() {
                                                 <td className="py-3 px-2">
                                                     <input 
                                                         type="number" 
-                                                        value={set.rest_time_seconds}
+                                                        value={isNaN(set.rest_time_seconds) ? '' : set.rest_time_seconds}
                                                         onChange={(e) => updateSet(groupIndex, setIndex, 'rest_time_seconds', parseFloat(e.target.value))}
                                                         className="w-20 bg-zinc-50 border border-zinc-200 rounded-lg px-2 py-1 text-center"
                                                     />
