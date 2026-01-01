@@ -219,30 +219,43 @@ function CreateMenuPage() {
                         </div>
                     </div>
 
-                    {playlist.map((item, index) => (
-                        <motion.div 
-                            key={item.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-white border border-zinc-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row items-center gap-4 group relative"
-                        >
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-zinc-200 group-hover:bg-primary transition-colors rounded-l-xl"></div>
-                            
-                            {/* Numbering */}
-                            <div className="w-8 h-8 rounded-full bg-zinc-50 text-zinc-400 font-bold text-xs flex items-center justify-center shrink-0">
-                                {index + 1}
-                            </div>
+                    {playlist.map((item, index) => {
+                        // Calculate Set Number for UI
+                        const previousOccurrences = playlist.slice(0, index).filter(i => i.name === item.name).length;
+                        const setNumber = previousOccurrences + 1;
+
+                        return (
+                            <motion.div 
+                                key={item.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-white border border-zinc-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row items-center gap-4 group relative"
+                            >
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-zinc-200 group-hover:bg-primary transition-colors rounded-l-xl"></div>
+                                
+                                {/* Numbering */}
+                                <div className="w-8 h-8 rounded-full bg-zinc-50 text-zinc-400 font-bold text-xs flex items-center justify-center shrink-0">
+                                    {index + 1}
+                                </div>
 
                             {/* Exercise Select */}
                             <div className="flex-1 w-full">
-                                <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-1 md:hidden">Exercise</label>
-                                <select 
-                                    value={item.name} 
-                                    onChange={(e) => updateItem(index, 'name', e.target.value)}
-                                    className="w-full bg-transparent font-bold text-zinc-900 focus:outline-none cursor-pointer"
-                                >
-                                    {EXERCISE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                                </select>
+                                <div className="flex justify-between md:hidden mb-1">
+                                     <label className="text-[10px] font-bold text-zinc-400 uppercase">Exercise</label>
+                                     <span className="text-[10px] font-bold text-blue-500 uppercase bg-blue-50 px-2 rounded-md">Set {setNumber}</span>
+                                </div>
+                                <div className="relative">
+                                    <select 
+                                        value={item.name} 
+                                        onChange={(e) => updateItem(index, 'name', e.target.value)}
+                                        className="w-full bg-transparent font-bold text-zinc-900 focus:outline-none cursor-pointer appearance-none py-1"
+                                    >
+                                        {EXERCISE_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                    </select>
+                                    <span className="hidden md:inline-block absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-500 uppercase bg-blue-50 px-2 rounded-md pointer-events-none">
+                                        Set {setNumber} (Auto)
+                                    </span>
+                                </div>
                             </div>
 
                             {/* Parameters */}
@@ -303,7 +316,8 @@ function CreateMenuPage() {
                                 </button>
                             </div>
                         </motion.div>
-                    ))}
+                    );
+                    })}
 
                     <div className="flex gap-4 pt-4">
                         <button 
