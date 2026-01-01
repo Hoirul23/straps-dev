@@ -240,6 +240,7 @@ function TrainingPage() {
         
         const isMatchingExercise = stats.exercise && numberSafeMatch(stats.exercise, currentTarget.name);
 
+        if (isMatchingExercise) {
              if (currentRepsInSet >= currentTarget.reps) {
                  // Linear Logic: Next Exercise in List
                  const nextExIdx = currentExerciseIndex + 1;
