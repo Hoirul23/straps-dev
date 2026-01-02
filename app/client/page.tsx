@@ -74,6 +74,22 @@ function ClientHub() {
                             </div>
                         </motion.div>
                     </Link>
+
+                    {/* Free Style Card */}
+                    <Link href="/client/free" className="group md:col-span-2">
+                        <motion.div 
+                            whileHover={{ y: -5 }}
+                            className="bg-gradient-to-r from-purple-500 to-indigo-600 p-10 rounded-[2rem] shadow-xl group-hover:shadow-2xl transition-all h-full flex items-center justify-between"
+                        >
+                            <div className="text-white">
+                                <h2 className="text-3xl font-bold mb-2">Free Style Builder</h2>
+                                <p className="text-white/80 mb-0">Build your own session on the fly. No coach required.</p>
+                            </div>
+                            <div className="w-16 h-16 rounded-2xl bg-white/20 text-white flex items-center justify-center group-hover:scale-110 transition-transform backdrop-blur-sm">
+                                <ActivityIcon className="w-8 h-8" />
+                            </div>
+                        </motion.div>
+                    </Link>
                 </div>
 
                 {/* Recent Activity Section */}

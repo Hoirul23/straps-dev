@@ -58,6 +58,19 @@ function TrainingPage() {
 
     // Fetch Latest Menu
     const fetchMenu = async () => {
+        // Check for Free Mode
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mode') === 'free') {
+            const local = localStorage.getItem('straps_free_mode_menu');
+            if (local) {
+                const menuData = JSON.parse(local);
+                setMenu(menuData);
+                setCurrentExerciseIndex(0);
+                setRepsOffset(0);
+                return;
+            }
+        }
+
         if (!user) return;
         const headers = { 'x-user-id': user.id.toString() };
 
@@ -68,9 +81,7 @@ function TrainingPage() {
                 const latest = data[0]; 
                 if (typeof latest.exercises === 'string') latest.exercises = JSON.parse(latest.exercises);
                 setMenu(latest);
-                setMenu(latest);
                 setCurrentExerciseIndex(0);
-                // setCurrentSet(1);
                 setRepsOffset(0);
             }
         } catch (err) {
