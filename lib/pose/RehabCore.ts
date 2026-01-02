@@ -1,20 +1,37 @@
-import { Landmark, EXERCISE_CONFIGS } from './ExerciseRules';
-import { RepetitionCounter, RepetitionSummary } from './RepetitionCounter';
-import { computeConvexHullArea, normalizeLandmarks, calculateAngle, computeDistance } from './MathUtils';
+import { Landmark } from './ExerciseRules';
+import { 
+    computeFeatures, RepFSM, Vec3,
+    BicepCurlCounter, HammerCurlCounter, OverheadPressCounter, 
+    LateralRaiseCounter, SquatCounter, DeadliftCounter, LungeCounter 
+} from './RehabFSM';
+
+// Map UI names to Counter Classes
+const COUNTER_MAP: { [key: string]: () => RepFSM[] } = {
+    'bicep_curl': () => [new BicepCurlCounter('left'), new BicepCurlCounter('right')],
+    'hammer_curl': () => [new HammerCurlCounter('left'), new HammerCurlCounter('right')],
+    'shoulder_press': () => [new OverheadPressCounter()], // Bilateral logic inside? No, it's single counter based on avg/both
+    'lateral_raises': () => [new LateralRaiseCounter()],
+    'squat': () => [new SquatCounter()],
+    'deadlift': () => [new DeadliftCounter()],
+    'lunges': () => [new LungeCounter()] // Bilateral or unified? FSM seems unified (min of both knees)
+};
 
 export class RehabCore {
-    private counter: RepetitionCounter;
-    
+    private counters: { [key: string]: RepFSM[] } = {};
+    private worldLandmarksCache: Vec3[] = []; // If we had world landmarks, for now we might approximate or expect them passed
+
     constructor() {
-        this.counter = new RepetitionCounter();
+        // Initialize all counters? Or lazy load?
+        // Let's lazy load or init on reset.
     }
 
     public reset() {
-        this.counter = new RepetitionCounter();
+        this.counters = {};
     }
 
-    public process(exerciseName: string, landmarks: Landmark[], frameTime: number = 0) {
-        const KEY_MAP: {[key:string]: string} = {
+    public process(exerciseName: string, landmarks: Landmark[], worldLandmarks: Landmark[] = [], frameTime: number = 0) {
+         // Normalize exercise name
+         const KEY_MAP: {[key:string]: string} = {
             'bicep_curls': 'bicep_curl',
             'shoulder_press': 'shoulder_press',
             'hammer_curls': 'hammer_curl',
@@ -24,86 +41,126 @@ export class RehabCore {
             'lunges': 'lunges'
         };
         const configKey = KEY_MAP[exerciseName] || exerciseName;
-        const config = EXERCISE_CONFIGS[configKey];
+
+        // Init counters if not exists
+        if (!this.counters[configKey]) {
+            const factory = COUNTER_MAP[configKey];
+            if (factory) {
+                this.counters[configKey] = factory();
+            } else {
+                return null; // Unknown exercise
+            }
+        }
+
+        const activeCounters = this.counters[configKey];
+        if (!activeCounters) return null;
+
+        // Data Conversion
+        // We usually need World Landmarks for accurate angles (meters). 
+        // MediaPipe Pose returns:
+        // 1. poseLandmarks (normalized x,y,z)
+        // 2. poseWorldLandmarks (meters x,y,z)
+        // 
+        // The current `landmarks` input in Straps usually comes from `poseLandmarks` (normalized).
+        // The new algorithm expects `normalized` AND `world`.
+        // If we only have normalized, we can pass normalized as world, but angles might be skewed by perspective.
+        // HOWEVER, `angleDeg` uses `sub` and `dot`. If z is normalized (0..1 scale relative to image width), it's roughly ok for basic 2D-ish angles.
+        // Ideally we update `HARCore` to pass world landmarks too.
+        // For now, I will use `landmarks` for BOTH, assuming the user is aware or `z` is roughly scaled.
+        // Actually `HARCore` sees `Landmark` interface which has x,y,z.
         
-        if (!config || !landmarks || landmarks.length === 0) return null;
-
-        this.counter.current_exercise = configKey;
-
-        // 1. Calculate All Required Angles
-        // Mediapipe Indices
-        const I = {
-            sho_l: 11, sho_r: 12,
-            elb_l: 13, elb_r: 14,
-            wri_l: 15, wri_r: 16,
-            hip_l: 23, hip_r: 24,
-            kne_l: 25, kne_r: 26,
-            ank_l: 27, ank_r: 28
-        };
-        const lm = (i: number) => landmarks[i];
-        const ang = (a: number, b: number, c: number) => calculateAngle(lm(a), lm(b), lm(c));
-
-        // Angles Dictionary
-        const angles: {[key: string]: number} = {
-            // Arms
-            'elbow_l': ang(I.sho_l, I.elb_l, I.wri_l),
-            'elbow_r': ang(I.sho_r, I.elb_r, I.wri_r),
-            'shoulder_l': ang(I.elb_l, I.sho_l, I.hip_l),
-            'shoulder_r': ang(I.elb_r, I.sho_r, I.hip_r),
-            // Legs
-            'hip_l': ang(I.sho_l, I.hip_l, I.kne_l),
-            'hip_r': ang(I.sho_r, I.hip_r, I.kne_r),
-            'knee_l': ang(I.hip_l, I.kne_l, I.ank_l),
-            'knee_r': ang(I.hip_r, I.kne_r, I.ank_r),
-        };
-
-        // Update Counter Buffers
-        this.counter.update_angles(
-            angles['elbow_r'], angles['elbow_l'],
-            angles['shoulder_r'], angles['shoulder_l']
-        );
-
-        // 2. Metrics
-        // Normalization
-        const normLandmarks = normalizeLandmarks(landmarks);
+        const vecLandmarks: Vec3[] = landmarks.map(l => ({ x: l.x, y: l.y, z: l.z || 0, visibility: l.visibility }));
+        const vecWorld: Vec3[] = (worldLandmarks && worldLandmarks.length > 0) 
+            ? worldLandmarks.map(l => ({ x: l.x, y: l.y, z: l.z || 0, visibility: l.visibility }))
+            : vecLandmarks; // Fallback
         
-        // Convex Hull
-        // Convert to Point array for hull calc
-        const hullPoints = normLandmarks.map(l => ({x: l.x, y: l.y}));
-        const hullArea = computeConvexHullArea(hullPoints);
+        // Compute Features
+        const features = computeFeatures(vecLandmarks, vecWorld, frameTime || Date.now());
 
-        // Wrist Distance
-        const wristDist = computeDistance(
-            {x: normLandmarks[I.wri_l].x, y: normLandmarks[I.wri_l].y},
-            {x: normLandmarks[I.wri_r].x, y: normLandmarks[I.wri_r].y}
-        );
+        // Update Counters
+        const results = activeCounters.map(c => c.update(features));
 
-        // 3. Count
-        const [stageR, stageL, completed, summary] = this.counter.count_repetitions(
-            angles,
-            wristDist,
-            hullArea,
-            config,
-            frameTime || Date.now()
-        );
+        // Format Output for HARCore
+        // Old format: { left: { stage, reps, angle }, right: { stage, reps, angle }, feedback, scores }
+        
+        // Determine Left/Right results
+        // If we have 2 counters, usually [0]=Left, [1]=Right (based on my factory above)
+        // Wait, BicepCurlCounter('left') is first?
+        // Let's look at factory:
+        // 'bicep_curl': () => [new BicepCurlCounter('left'), new BicepCurlCounter('right')],
+        
+        let leftRes = { stage: 'REST', reps: 0, angle: 0 };
+        let rightRes = { stage: 'REST', reps: 0, angle: 0 };
+        let feedback = "";
+        
+        if (configKey === 'bicep_curl' || configKey === 'hammer_curl') {
+            const lCounter = activeCounters[0];
+            const rCounter = activeCounters[1];
+            
+            leftRes = { 
+                stage: lCounter.state === 'HIGH' ? 'UP' : 'DOWN', 
+                reps: lCounter.reps, 
+                angle: features.leftElbow 
+            };
+            rightRes = { 
+                stage: rCounter.state === 'HIGH' ? 'UP' : 'DOWN', 
+                reps: rCounter.reps, 
+                angle: features.rightElbow 
+            };
+        } else {
+            // Unified counters (Squat, Press, etc)
+            // We apply result to "Both" or just map to nice UI
+            const main = activeCounters[0];
+            const stage = main.state === 'HIGH' ? 'UP' : 'DOWN';
+            const reps = main.reps;
+            
+            leftRes = { stage, reps, angle: 0 }; // Angle 0 for now as main metric might be diff
+            rightRes = { stage, reps, angle: 0 };
+            
+            // Populate specific angles for UI if needed
+            if (configKey === 'squat') { leftRes.angle = features.leftKnee; rightRes.angle = features.rightKnee; }
+            if (configKey === 'shoulder_press') { leftRes.angle = features.leftElbow; rightRes.angle = features.rightElbow; } // Approx
+        }
+        
+        // Accumulate feedback? FSM has `debug`
+        // results.forEach(r => if(r.debug.note) feedback += r.debug.note + " ");
 
-        // 4. Return Standard Format
         return {
-            left: { stage: stageL, reps: this.counter.get_raw_reps(configKey), angle: angles['elbow_l'] }, // Simplified angle ret for UI
-            right: { stage: stageR, reps: this.counter.get_raw_reps(configKey), angle: angles['elbow_r'] },
-            feedback: summary.feedback,
-            scores: summary.scores
+            left: leftRes,
+            right: rightRes,
+            feedback: feedback.trim(),
+            scores: {} // No scores in new FSM yet
         };
     }
     
     public getReps(exName: string) {
-        // Map back
+         // Normalized key
          const KEY_MAP: {[key:string]: string} = {
             'bicep_curls': 'bicep_curl',
-            'shoulder_press': 'shoulder_press'
+            'shoulder_press': 'shoulder_press',
+            'hammer_curls': 'hammer_curl',
+            'lateral_raises': 'lateral_raises',
+            'squats': 'squat',
+            'deadlifts': 'deadlift',
+            'lunges': 'lunges'
         };
         const configKey = KEY_MAP[exName] || exName;
-        return this.counter.get_raw_reps(configKey);
+        const counters = this.counters[configKey];
+        if (!counters || counters.length === 0) return 0;
+        
+        // If multiple counters (bilateral), usually we return the SUM or MAX or MIN?
+        // Old logic was: wait for both to complete -> increment total.
+        // New FSM logic tracks reps independently.
+        // For Curls, it likely makes sense to show Total Reps (L+R) or Max?
+        // Usually "1 Rep" means both arms if simultaneous, or 1 each.
+        // For now, let's return the AVG or MAX.
+        // If unilateral exercise mode?
+        // Straps usually assumes bilateral simultaneous.
+        // If I do 10 left and 10 right = 20 total? or 10 sets?
+        // Let's return MAX for now (assuming users try to keep sync).
+        // Actually, if I do alternate curls, I want sum?
+        // Let's stick to MAX for synchronized exercises.
+        return Math.max(...counters.map(c => c.reps));
     }
 }
 

@@ -40,7 +40,7 @@ export class HARCore {
         // this.currentExercise = null; // Don't nullify exercise, just counters
     }
 
-    public async process(landmarks: Landmark[]) {
+    public async process(landmarks: Landmark[], worldLandmarks: Landmark[] = []) {
         if (!landmarks || landmarks.length === 0) return null;
 
         // 1. Activity Recognition (HAR) - XGBoost
@@ -56,7 +56,7 @@ export class HARCore {
         let debug = {};
 
         if (this.currentExercise) {
-            const result = this.rehab.process(this.currentExercise, landmarks);
+            const result = this.rehab.process(this.currentExercise, landmarks, worldLandmarks);
             if (result) {
                 // Combine left/right reps for total or max?
                 // Usually we want total completed reps.

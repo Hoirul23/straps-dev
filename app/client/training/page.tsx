@@ -229,9 +229,11 @@ function TrainingPage() {
 
                 // Process Logic
                 if (isStartedRef.current && !isRestingRef.current && result.landmarks && result.landmarks.length > 0) {
-                     // Pass normalized landmarks (x,y,z,visibility)
-                     // Tasks API: x,y in [0,1], z in relative scale
-                     const res = await har.process(result.landmarks[0] as any);
+                     // Pass normalized landmarks (x,y,z,visibility) AND world landmarks (meters)
+                     const res = await har.process(
+                         result.landmarks[0] as any, 
+                         result.worldLandmarks[0] as any
+                     );
                      
                      if (res) {
                         setStats({
