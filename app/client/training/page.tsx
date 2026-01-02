@@ -6,19 +6,26 @@ import { HARCore } from '@/lib/pose/HARCore';
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import { RefreshCcw, ArrowLeft, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { AuthProvider, useAuth } from '@/lib/auth';
 
 export default function TrainingPageWrap() {
     return (
         <AuthProvider>
-            <TrainingPage />
+            <Suspense fallback={<div className="min-h-screen bg-zinc-900 flex items-center justify-center text-white">Loading...</div>}>
+                <TrainingPage />
+            </Suspense>
         </AuthProvider>
     );
 }
 
 function TrainingPage() {
     const { user } = useAuth();
+    const searchParams = useSearchParams();
+    const mode = searchParams.get('mode');
+
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -59,8 +66,7 @@ function TrainingPage() {
     // Fetch Latest Menu
     const fetchMenu = async () => {
         // Check for Free Mode
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('mode') === 'free') {
+        if (mode === 'free') {
             const local = localStorage.getItem('straps_free_mode_menu');
             if (local) {
                 const menuData = JSON.parse(local);
@@ -153,7 +159,7 @@ function TrainingPage() {
                 (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
             }
         };
-    }, [user]); // Added user to dependency array for fetchMenu
+    }, [user, mode]); // Trigger init/fetch when mode changes
 
     // Rest Timer Countdown
     useEffect(() => {
@@ -368,14 +374,28 @@ function TrainingPage() {
                         Reset
                     </button>
 
-                    {new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free' && (
+                    <div className="flex bg-zinc-100 p-1 rounded-full border border-zinc-200">
                         <Link 
                             href="/client/training"
-                            className="px-4 py-2 bg-zinc-800 text-white rounded-full text-xs font-bold uppercase tracking-widest border border-zinc-700 hover:bg-zinc-700 transition-colors"
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+                                !(new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free')
+                                ? 'bg-white text-primary shadow-sm' 
+                                : 'text-zinc-400 hover:text-zinc-600'
+                            }`}
                         >
-                            Exit
+                            Assigned
                         </Link>
-                    )}
+                        <Link 
+                            href="/client/training?mode=free"
+                            className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
+                                (new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free')
+                                ? 'bg-white text-primary shadow-sm' 
+                                : 'text-zinc-400 hover:text-zinc-600'
+                            }`}
+                        >
+                            Personal
+                        </Link>
+                    </div>
                  </div>
             </header>
             
