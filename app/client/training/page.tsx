@@ -398,13 +398,33 @@ function TrainingPage() {
                    {!isStarted && !isLoading && (
                         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-40 flex flex-col items-center justify-center p-8 text-center">
                             <h2 className="text-3xl font-bold text-zinc-900 mb-2">Ready to Train?</h2>
-                            <p className="text-zinc-600 mb-8 max-w-md">Ensure your full body is visible in the camera. When you are ready, press start to begin the program.</p>
-                            <button 
-                                onClick={() => setIsStarted(true)}
-                                className="px-12 py-4 bg-primary text-white text-lg font-bold rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center gap-3"
-                            >
-                                <PlayCircle className="w-6 h-6" /> START WORKOUT
-                            </button>
+                            <p className="text-zinc-600 mb-8 max-w-md">
+                                {menu ? `Start your assigned program: ${menu.name}` : `No assigned program found.`}
+                            </p>
+                            
+                            <div className="flex flex-col gap-4">
+                                {menu && (
+                                    <button 
+                                        onClick={() => setIsStarted(true)}
+                                        className="px-12 py-4 bg-primary text-white text-lg font-bold rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all flex items-center justify-center gap-3 w-64"
+                                    >
+                                        <PlayCircle className="w-6 h-6" /> START {menu.name ? 'PROGRAM' : 'WORKOUT'}
+                                    </button>
+                                )}
+
+                                <div className="flex items-center gap-4 w-64">
+                                     <div className="h-px bg-zinc-300 flex-1"></div>
+                                     <span className="text-xs text-zinc-400 font-bold uppercase">OR</span>
+                                     <div className="h-px bg-zinc-300 flex-1"></div>
+                                </div>
+
+                                <Link 
+                                    href="/client/free"
+                                    className="px-12 py-4 bg-white border-2 border-zinc-200 text-zinc-600 text-lg font-bold rounded-full hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-3 w-64"
+                                >
+                                     CREATE PERSONAL MENU
+                                </Link>
+                            </div>
                         </div>
                    )}
                 </div>
