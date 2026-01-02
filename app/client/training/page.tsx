@@ -251,36 +251,17 @@ function TrainingPage() {
                                 // 23,25,27,29,31: Left Leg/Foot
                                 // 24,26,28,30,32: Right Leg/Foot
                                 
-                                let color = '#FFFFFF';
-                                let glow = '#FFFFFF';
+                                let color = '#00FFFF'; // Cyan
+                                let glow = '#00FFFF';  // Cyan Glow
                                 
-                                // Simple Even/Odd heuristic works for most limbs, but torso/face might mix.
-                                // Let's simplify:
-                                // Torso (11-12, 23-24, 11-23, 12-24) -> White/Silver
-                                const torsoIdx = [11,12,23,24];
-                                const isTorso = torsoIdx.includes(start) && torsoIdx.includes(end);
-                                
-                                if (isTorso) {
-                                    color = '#E0E0E0';
-                                    glow = '#FFFFFF';
-                                } else {
-                                    // Use check on `start` index
-                                    if (start % 2 === 1) { // Left
-                                        color = '#FF00FF'; // Magenta
-                                        glow = '#FF00FF';
-                                    } else { // Right
-                                        color = '#00FFFF'; // Cyan
-                                        glow = '#00FFFF';
-                                    }
-                                }
+                                // Torso can be slightly dimmer or same?
+                                // Let's stick to uniform Cyan as requested.
                                 
                                 ctx.shadowColor = glow;
-                                ctx.shadowBlur = 10;
+                                ctx.shadowBlur = 15; // Stronger glow
                                 ctx.strokeStyle = color;
                                 ctx.lineWidth = 4;
                                 ctx.stroke();
-                                
-                                // Reset shadow for next op? or keep for joints
                             }
                             
                             // Draw Joints
@@ -292,16 +273,11 @@ function TrainingPage() {
                                 if (i < 11 && i !== 0) continue; // Keep nose (0)
 
                                 ctx.beginPath();
-                                ctx.arc(p.x * canvas.width, p.y * canvas.height, 4, 0, 2 * Math.PI);
+                                ctx.arc(p.x * canvas.width, p.y * canvas.height, 5, 0, 2 * Math.PI);
                                 
-                                let color = '#FFFFFF';
-                                if (i % 2 === 1) color = '#FF00FF'; // Left
-                                else color = '#00FFFF'; // Right
-                                if (i === 0) color = '#FFFF00'; // Nose Yellow
-                                
-                                ctx.fillStyle = color;
-                                ctx.shadowColor = color;
-                                ctx.shadowBlur = 15;
+                                ctx.fillStyle = '#FFFFFF'; // White core
+                                ctx.shadowColor = '#00FFFF'; // Cyan glow
+                                ctx.shadowBlur = 20;
                                 ctx.fill();
                             }
                             
