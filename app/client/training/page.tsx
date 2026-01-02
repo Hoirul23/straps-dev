@@ -367,6 +367,15 @@ function TrainingPage() {
                     >
                         Reset
                     </button>
+
+                    {new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free' && (
+                        <Link 
+                            href="/client/training"
+                            className="px-4 py-2 bg-zinc-800 text-white rounded-full text-xs font-bold uppercase tracking-widest border border-zinc-700 hover:bg-zinc-700 transition-colors"
+                        >
+                            Exit
+                        </Link>
+                    )}
                  </div>
             </header>
             
