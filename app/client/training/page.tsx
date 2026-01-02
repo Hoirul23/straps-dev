@@ -220,8 +220,93 @@ function TrainingPage() {
                     if (result.landmarks) {
                         const drawingUtils = new DrawingUtils(ctx);
                         for (const lm of result.landmarks) {
-                            drawingUtils.drawLandmarks(lm, { radius: 1, color: '#00FF00' });
-                            drawingUtils.drawConnectors(lm, PoseLandmarker.POSE_CONNECTIONS, { color: '#00FF00', lineWidth: 2 });
+                            // Custom "Cyber" Drawing
+                            // drawingUtils.drawLandmarks(lm, { radius: 1, color: '#00FF00' });
+                            // drawingUtils.drawConnectors(lm, PoseLandmarker.POSE_CONNECTIONS, { color: '#00FF00', lineWidth: 2 });
+                            
+                            // Config
+                            const connectors = PoseLandmarker.POSE_CONNECTIONS;
+                            
+                            // Draw Connections
+                            ctx.lineCap = 'round';
+                            ctx.lineJoin = 'round';
+                            
+                            for (const { start, end } of connectors) {
+                                const p1 = lm[start];
+                                const p2 = lm[end];
+                                
+                                if (!p1 || !p2 || (p1.visibility && p1.visibility < 0.5) || (p2.visibility && p2.visibility < 0.5)) continue;
+                                
+                                ctx.beginPath();
+                                ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
+                                ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
+                                
+                                // Color logic
+                                const isLeft = (start % 2 === 1) || (end % 2 === 1); // Odd indices are usually left in MP
+                                // MP Pose: 11(L Sho), 12(R Sho). 
+                                // Actually:
+                                // 0-10: Face
+                                // 11,13,15,17,19,21: Left Arm/Hand
+                                // 12,14,16,18,20,22: Right Arm/Hand
+                                // 23,25,27,29,31: Left Leg/Foot
+                                // 24,26,28,30,32: Right Leg/Foot
+                                
+                                let color = '#FFFFFF';
+                                let glow = '#FFFFFF';
+                                
+                                // Simple Even/Odd heuristic works for most limbs, but torso/face might mix.
+                                // Let's simplify:
+                                // Torso (11-12, 23-24, 11-23, 12-24) -> White/Silver
+                                const torsoIdx = [11,12,23,24];
+                                const isTorso = torsoIdx.includes(start) && torsoIdx.includes(end);
+                                
+                                if (isTorso) {
+                                    color = '#E0E0E0';
+                                    glow = '#FFFFFF';
+                                } else {
+                                    // Use check on `start` index
+                                    if (start % 2 === 1) { // Left
+                                        color = '#FF00FF'; // Magenta
+                                        glow = '#FF00FF';
+                                    } else { // Right
+                                        color = '#00FFFF'; // Cyan
+                                        glow = '#00FFFF';
+                                    }
+                                }
+                                
+                                ctx.shadowColor = glow;
+                                ctx.shadowBlur = 10;
+                                ctx.strokeStyle = color;
+                                ctx.lineWidth = 4;
+                                ctx.stroke();
+                                
+                                // Reset shadow for next op? or keep for joints
+                            }
+                            
+                            // Draw Joints
+                            for (let i = 0; i < lm.length; i++) {
+                                const p = lm[i];
+                                if (p.visibility && p.visibility < 0.5) continue;
+                                
+                                // Skip face landmarks mostly? 0-10
+                                if (i < 11 && i !== 0) continue; // Keep nose (0)
+
+                                ctx.beginPath();
+                                ctx.arc(p.x * canvas.width, p.y * canvas.height, 4, 0, 2 * Math.PI);
+                                
+                                let color = '#FFFFFF';
+                                if (i % 2 === 1) color = '#FF00FF'; // Left
+                                else color = '#00FFFF'; // Right
+                                if (i === 0) color = '#FFFF00'; // Nose Yellow
+                                
+                                ctx.fillStyle = color;
+                                ctx.shadowColor = color;
+                                ctx.shadowBlur = 15;
+                                ctx.fill();
+                            }
+                            
+                            // Reset context
+                            ctx.shadowBlur = 0;
                         }
                     }
                     ctx.restore();
