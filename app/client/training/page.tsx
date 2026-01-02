@@ -127,7 +127,11 @@ function TrainingPage() {
                     
                     if (videoRef.current) {
                         videoRef.current.srcObject = stream;
-                        await videoRef.current.play();
+                        try {
+                            await videoRef.current.play();
+                        } catch (err) {
+                            console.warn("Video play aborted (harmless):", err);
+                        }
                         
                         setIsLoading(false);
                         requestRef.current = requestAnimationFrame(predictWebcam);
