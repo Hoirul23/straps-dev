@@ -424,10 +424,19 @@ function TrainingPage() {
 
                                 <Link 
                                     href="/client/free"
-                                    className="px-12 py-4 bg-white border-2 border-zinc-200 text-zinc-600 text-lg font-bold rounded-full hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-3 w-64"
+                                    className="px-12 py-4 bg-white border-2 border-zinc-200 text-zinc-600 text-lg font-bold rounded-full hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-3 w-64 text-center"
                                 >
                                      CREATE PERSONAL MENU
                                 </Link>
+
+                                {new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free' && (
+                                    <Link 
+                                        href="/client/training"
+                                        className="mt-2 text-zinc-400 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
+                                    >
+                                        Return to Assigned Program
+                                    </Link>
+                                )}
                             </div>
                         </div>
                    )}
