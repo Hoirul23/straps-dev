@@ -36,7 +36,7 @@ function TrainingPage() {
     const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
     // const [currentSet, setCurrentSet] = useState(1); // REMOVED: Linear Progression uses index only
     const [repsOffset, setRepsOffset] = useState(0); // Offset for accumulated reps
-    const [stats, setStats] = useState({ exercise: '', reps: 0, status: 'Idle', feedback: '' });
+    const [stats, setStats] = useState({ exercise: '', reps: 0, status: 'Idle', feedback: '', mae: 0 });
     const [isWorkoutComplete, setIsWorkoutComplete] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     
@@ -301,7 +301,8 @@ function TrainingPage() {
                             status: res.status,
                             exercise: res.exercise || 'Unknown',
                             reps: res.reps, // Reps from RehabCore
-                            feedback: res.feedback
+                            feedback: res.feedback,
+                            mae: (res.debug as any)?.scores?.deviation_mae || 0
                         });
                      }
                 }
@@ -630,6 +631,28 @@ function TrainingPage() {
                                 <span className="text-zinc-400 text-sm font-medium">COMPLETED</span>
                             </div>
                          </div>
+                    </div>
+
+                    {/* Form Quality Card (New Feature) */}
+                    <div className={`p-4 rounded-xl border flex justify-between items-center transition-colors shadow-sm ${
+                        (stats.mae || 0) > 15 
+                            ? 'bg-red-50 border-red-200 text-red-600'     
+                            : (stats.mae || 0) > 5 
+                                ? 'bg-yellow-50 border-yellow-200 text-yellow-600' 
+                                : 'bg-emerald-50 border-emerald-200 text-emerald-600' 
+                    }`}>
+                        <div className="flex flex-col text-left">
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Form Quality</span>
+                            <span className="text-xs uppercase font-bold mt-0.5">
+                                {(stats.mae || 0) > 15 ? 'Needs Improvement' : (stats.mae || 0) > 5 ? 'Fair' : 'Excellent'}
+                            </span>
+                        </div>
+                        <div className="text-right">
+                             <span className="text-[10px] uppercase text-current/60 block font-medium">Deviation</span>
+                             <div className="text-2xl font-black tabular-nums leading-none">
+                                {(stats.mae || 0).toFixed(1)}°
+                            </div>
+                        </div>
                     </div>
 
                     {stats.feedback && (

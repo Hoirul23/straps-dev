@@ -70,7 +70,10 @@ export class HARCore {
                      feedback += ` | ${result.feedback}`; // Add generic feedback
                 }
                 
-                debug = { angles: { l: result.left.angle, r: result.right.angle } };
+                debug = { 
+                    angles: { l: result.left.angle, r: result.right.angle },
+                    scores: result.scores 
+                };
             }
         }
 

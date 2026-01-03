@@ -148,3 +148,29 @@ export function calculateContainmentScore(userRange: [number, number], refRange:
     
     return intersection_length / user_length;
 }
+
+/*
+* Calculates the Mean Absolute Error (MAE) for a value against a target range.
+ * If the value is within range, error is 0.
+ * If outside, error is distance to the nearest bound.
+ */
+export function calculateRangeDeviation(value: number, range: [number, number]): number {
+    const [min, max] = range;
+    // If value is smaller than min, return difference
+    if (value < min) return Math.abs(min - value);
+    // If value is larger than max, return difference
+    if (value > max) return Math.abs(value - max);
+    // Within range, perfect score (0 deviation)
+    return 0;
+}
+
+/**
+ * Computes average deviation across multiple joints.
+ */
+export function computeMAE(errors: number[]): number {
+    if (errors.length === 0) return 0;
+    const sum = errors.reduce((a, b) => a + b, 0);
+    return sum / errors.length;
+}
+
+// End of file

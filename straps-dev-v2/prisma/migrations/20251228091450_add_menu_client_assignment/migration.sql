@@ -1,0 +1,3 @@
+-- This migration is skipped because its changes (adding client_id)
+-- were manually merged into the previous migration to fix type mismatches (Integer vs String IDs).
+-- This file is kept to preserve migration history order.
