@@ -468,11 +468,12 @@ function TrainingPage() {
                    <video ref={videoRef} className="hidden" width="640" height="480" autoPlay playsInline muted />
                    <canvas ref={canvasRef} width="640" height="480" className="w-full h-auto object-contain" />
                    
-                   <div className="absolute top-6 left-6 flex gap-4">
+                   {/* Status Display Removed as per user request (kept in Live Monitor) */}
+                   {/* <div className="absolute top-6 left-6 flex gap-4">
                        <div className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-widest backdrop-blur-md border ${stats.status === 'Fall Detected' ? 'bg-red-500/20 border-red-500 text-red-400' : 'bg-primary/10 border-primary/30 text-primary'}`}>
                            {stats.status.toUpperCase()}
                        </div>
-                   </div>
+                   </div> */}
 
                    {/* Rest Overlay */}
                    {isResting && (
