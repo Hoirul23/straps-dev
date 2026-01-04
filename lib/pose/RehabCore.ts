@@ -77,11 +77,11 @@ export class RehabCore {
                 else if (prefix.includes('hip')) val = (features.leftHip + features.rightHip) / 2;
                 else if (prefix.includes('shoulder')) {
                     // Use new Press/Posture angles
-                    if (features.leftShoulder && features.rightShoulder) {
+                    // Check undefined/null specifically, allowing 0
+                    if (features.leftShoulder !== undefined && features.rightShoulder !== undefined) {
                          val = (features.leftShoulder + features.rightShoulder) / 2;
                     } else {
-                        // Fallback only if new features missing (should not happen)
-                        val = 0; 
+                        val = -1; // Sentinal for missing
                     }
                 }
                 
@@ -104,7 +104,8 @@ export class RehabCore {
                 }
 
                 // If strictly standard naming
-                if(val > 0) {
+                // Allow 0, check for sentinel -1
+                if(val >= 0) {
                      const err = calculateRangeDeviation(val, config.dynamic_angles[key]);
                      errors.push(err);
                 }

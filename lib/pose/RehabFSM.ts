@@ -51,7 +51,6 @@ export type PoseFeatures = {
   leftElbow: number; rightElbow: number;
   leftKnee: number; rightKnee: number;
   leftHip: number; rightHip: number;
-  leftShoulder: number; rightShoulder: number; // NEW: Press/Posture Angle
 
   // normalized coords (0..1), y lebih besar = lebih bawah
   leftWristY: number; rightWristY: number;
@@ -61,6 +60,10 @@ export type PoseFeatures = {
   // NEW: Hand Orientation Data
   leftThumbY: number; leftPinkyY: number;
   rightThumbY: number; rightPinkyY: number;
+
+  // NEW: X Coordinates for Width/Rotation Check
+  leftThumbX: number; leftPinkyX: number;
+  rightThumbX: number; rightPinkyX: number;
 
   visArms: number; visLegs: number;
 };
@@ -85,15 +88,11 @@ export function computeFeatures(
   const armsIdx = [LM.LEFT_SHOULDER, LM.LEFT_ELBOW, LM.LEFT_WRIST, LM.RIGHT_SHOULDER, LM.RIGHT_ELBOW, LM.RIGHT_WRIST];
   const legsIdx = [LM.LEFT_HIP, LM.LEFT_KNEE, LM.LEFT_ANKLE, LM.RIGHT_HIP, LM.RIGHT_KNEE, LM.RIGHT_ANKLE];
 
-  const leftShoulderP = angleDeg(A(LM.LEFT_ELBOW), A(LM.LEFT_SHOULDER), A(LM.LEFT_HIP));
-  const rightShoulderP = angleDeg(A(LM.RIGHT_ELBOW), A(LM.RIGHT_SHOULDER), A(LM.RIGHT_HIP));
-
   return {
     tMs,
     leftElbow, rightElbow,
     leftKnee, rightKnee,
     leftHip, rightHip,
-    leftShoulder: leftShoulderP, rightShoulder: rightShoulderP,
 
     leftWristY: N(LM.LEFT_WRIST).y,
     rightWristY: N(LM.RIGHT_WRIST).y,
@@ -106,6 +105,12 @@ export function computeFeatures(
     leftPinkyY: N(LM.LEFT_PINKY).y,
     rightThumbY: N(LM.RIGHT_THUMB).y,
     rightPinkyY: N(LM.RIGHT_PINKY).y,
+
+    // NEW: Capture X coordinates
+    leftThumbX: N(LM.LEFT_THUMB).x,
+    leftPinkyX: N(LM.LEFT_PINKY).x,
+    rightThumbX: N(LM.RIGHT_THUMB).x,
+    rightPinkyX: N(LM.RIGHT_PINKY).x,
 
     visArms: meanVisibility(world, armsIdx),
     visLegs: meanVisibility(world, legsIdx),
@@ -245,23 +250,17 @@ export class BicepCurlCounter extends BaseCurlCounter {
     super(side, "bicep_curl");
   }
 
-  // Bicep Curl = Horizontal Grip (Supinated)
-  // The thumb and pinky should be roughly level in Y (vertical height).
-  // If thumb is significantly higher than pinky, it's a Hammer grip.
+  // LOGIC: Simultaneous Lift
+  // Valid ONLY if the OTHER arm is also active (Bent).
   extraValid(f: PoseFeatures) {
-    const thumbY = this.side === "right" ? f.rightThumbY : f.leftThumbY;
-    const pinkyY = this.side === "right" ? f.rightPinkyY : f.leftPinkyY;
-    
-    // Difference: Positive means pinky is lower (Thumb is higher/Top)
-    const diff = Math.abs(pinkyY - thumbY);
+    const otherArmAngle = this.side === "right" ? f.leftElbow : f.rightElbow;
 
-    // Reject if Thumb is significantly higher than Pinky (Hammer Grip)
-    // Threshold ~0.02 (normalized units)
-    if (diff > 0.03) {
-        // This looks like a Hammer curl grip (Vertical)
-        return false;
+    // Check: Is the other arm bent? (< 120 degrees)
+    // If the other arm is straight (> 120), then we are NOT doing simultaneous curls.
+    if (otherArmAngle > 120) {
+        return false; // Reject: Other arm is lazy/resting
     }
-    return true; 
+    return true; // Accept: Both arms are working
   }
 }
 
@@ -270,47 +269,49 @@ export class HammerCurlCounter extends BaseCurlCounter {
     super(side, "hammer_curl");
   }
 
-  // Hammer Curl = Vertical Grip (Neutral)
-  // The Thumb (Top) must be higher (smaller Y) than the Pinky (Bottom).
+  // LOGIC: Alternating Lift
+  // Valid ONLY if the OTHER arm is resting (Straight).
   extraValid(f: PoseFeatures) {
-    const thumbY = this.side === "right" ? f.rightThumbY : f.leftThumbY;
-    const pinkyY = this.side === "right" ? f.rightPinkyY : f.leftPinkyY;
-    
-    // Difference: Pinky Y - Thumb Y
-    // In Hammer, Pinky is physically lower (larger Y) than Thumb.
-    // So diff should be POSITIVE and significant.
-    const diff = pinkyY - thumbY;
+    const otherArmAngle = this.side === "right" ? f.leftElbow : f.rightElbow;
 
-    // Require Thumb to be "above" Pinky significantly
-    if (diff < 0.01) {
-        // If they are level (diff ~0) or inverted, it's NOT a hammer curl
-        return false;
+    // Check: Is the other arm straight? (> 130 degrees)
+    // If the other arm is bent (< 130), it means we are moving both (Simultaneous).
+    if (otherArmAngle < 130) {
+        return false; // Reject: Both arms are moving
     }
-    return true;
+    return true; // Accept: Only this arm is moving
   }
 }
 
 export class OverheadPressCounter extends RepFSM {
-  private highMargin = 0.04;
-  // private lowMargin = 0.06;
   constructor() { 
-      // ROM is 0 here because metric is relative dist, handled differently or just trust threshold crossing?
-      // Author set minRomDeg=0. Probably because crossing thresholds implies ROM.
-      super("overhead_press", 0.45, 0.25, 0.004, 900, 120, 500, 12000, 0); 
+      // Using relaxed Min ROM (30) to ensuring counting
+      super("overhead_press", 0.6, 0.25, 0.8, 900, 120, 500, 12000, 30); 
   }
+  
   visibilityOk(f: PoseFeatures) { return f.visArms >= this.minVis; }
-  metric(f: PoseFeatures) {
-    const wAvg = 0.5 * (f.leftWristY + f.rightWristY);
-    return wAvg - f.noseY;
+  
+  metric(f: PoseFeatures) { 
+      // Use MIN elbow angle to require at least one arm to lock out
+      return Math.min(f.leftElbow, f.rightElbow); 
   }
-  isHigh(m: number) { return m < -this.highMargin; }
-  // isLow(_m: number, f: PoseFeatures) {
-  //   const sAvg = 0.5 * (f.leftShoulderY + f.rightShoulderY);
-  //   const wAvg = 0.5 * (f.leftWristY + f.rightWristY);
-  //   return Math.abs(wAvg - sAvg) < this.lowMargin;
-  // }
-  isLow(m: number, f: PoseFeatures) { return m > 0.02; }
-  extraValid(f: PoseFeatures) { return f.leftElbow > 110 || f.rightElbow > 110; }
+  
+  // High State (Lockout) > 140 deg
+  isHigh(m: number) { 
+      return m > 140; 
+  }
+  
+  // Low State (Start/Chin level) < 120 deg
+  isLow(m: number) { 
+      return m < 110; 
+  } 
+
+  // Validation: Ensure hands are ABOVE shoulders
+  extraValid(f: PoseFeatures) { 
+      const isHandsUpL = f.leftWristY < f.leftShoulderY;
+      const isHandsUpR = f.rightWristY < f.rightShoulderY;
+      return isHandsUpL && isHandsUpR;
+  }
 }
 
 export class LateralRaiseCounter extends RepFSM {
