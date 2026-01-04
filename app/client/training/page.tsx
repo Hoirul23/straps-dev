@@ -311,7 +311,7 @@ function TrainingPage() {
                         // Update Feedback UI State
                         if (res.feedback) {
                             setFeedbackMsg(res.feedback);
-                            // Detect Warning Flag (⚠️) from RehabCore
+                            // Detect Warning Flag from RehabCore
                             setIsWarning(res.feedback.includes("⚠️"));
                         } else {
                             setFeedbackMsg("");
@@ -490,39 +490,7 @@ function TrainingPage() {
                    </div> */}
 
                     {/* --- NEW: FEEDBACK OVERLAY WINDOW --- */}
-                   {feedbackMsg && (
-                      <div className={`absolute top-8 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-xl shadow-2xl border-2 transition-all duration-300 z-50 flex items-center gap-4 max-w-md w-full
-                        ${isWarning 
-                          ? "bg-red-500/95 border-red-700 text-white animate-pulse" // Critical Warning
-                          : "bg-yellow-400/95 border-yellow-600 text-zinc-900"    // Form Correction
-                        }`}
-                      >
-                        {/* Icon */}
-                        {isWarning ? (
-                            <div className="p-2 bg-white/20 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                        ) : (
-                            <div className="p-2 bg-white/20 rounded-full">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                        )}
-                        
-                        {/* Text */}
-                        <div className="flex-1">
-                            <h3 className="font-black text-sm uppercase tracking-widest mb-1 opacity-90">
-                              {isWarning ? "Incorrect Exercise" : "Form Check"}
-                            </h3>
-                            <p className="font-bold text-lg leading-tight whitespace-pre-wrap">
-                              {feedbackMsg.replace(" | ", "\n").replace("⚠️ ", "")}
-                            </p>
-                        </div>
-                      </div>
-                   )}
+
 
                    {/* Rest Overlay */}
                    {isResting && (
@@ -660,66 +628,85 @@ function TrainingPage() {
                         </div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-2xl border border-zinc-200 flex-1 flex flex-col justify-center items-center text-center shadow-lg">
-                         <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-4">Real-time Counter</h2>
+                    <div className="bg-white p-4 rounded-2xl border border-zinc-200 flex flex-col justify-center items-center text-center shadow-lg h-48">
+                         <h2 className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-2">Real-time Counter</h2>
                          
                          <div className="relative">
-                             <svg className="w-56 h-56 transform -rotate-90">
-                                <circle cx="112" cy="112" r="100" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-zinc-100" />
+                             <svg className="w-32 h-32 transform -rotate-90">
+                                <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-zinc-100" />
                                 <circle 
-                                    cx="112" cy="112" r="100" 
-                                    stroke="currentColor" strokeWidth="8" fill="transparent" 
+                                    cx="64" cy="64" r="56" 
+                                    stroke="currentColor" strokeWidth="6" fill="transparent" 
                                     className="text-primary transition-all duration-500 ease-out drop-shadow-md"
-                                    strokeDasharray={2 * Math.PI * 88}
-                                    strokeDashoffset={2 * Math.PI * 88 * (1 - (Math.max(0, stats.reps - repsOffset) / (currentTarget?.reps || 1)))}
+                                    strokeDasharray={2 * Math.PI * 56}
+                                    strokeDashoffset={2 * Math.PI * 56 * (1 - (Math.max(0, stats.reps - repsOffset) / (currentTarget?.reps || 1)))}
                                 />
                             </svg>
                             <div className="absolute inset-0 flex items-center justify-center flex-col">
-                                <span className="text-6xl font-black text-zinc-900">{Math.max(0, stats.reps - repsOffset)}</span>
-                                <span className="text-zinc-400 text-sm font-medium">COMPLETED</span>
+                                <span className="text-4xl font-black text-zinc-900">{Math.max(0, stats.reps - repsOffset)}</span>
+                                <span className="text-zinc-400 text-[10px] font-medium">REPS</span>
                             </div>
                          </div>
                     </div>
 
-                    <div className={`p-4 rounded-xl border flex justify-between items-center transition-colors shadow-sm ${
-                        stats.mae > 15 
-                            ? 'bg-red-50 border-red-200 text-red-600'     
-                            : stats.mae > 5 
-                                ? 'bg-yellow-50 border-yellow-200 text-yellow-600' 
-                                : 'bg-emerald-50 border-emerald-200 text-emerald-600' 
+                    {/* Redesigned Cyberpunk Feedback Card (Expanded) */}
+                    <div className={`p-0.5 rounded-xl flex-1 bg-gradient-to-r ${
+                        isWarning ? 'from-red-500 via-rose-500 to-red-500 animate-pulse' : 'from-cyan-400 via-blue-500 to-cyan-400'
                     }`}>
-                        <div className="flex flex-col text-left">
-                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Form Quality</span>
-                            <span className="text-xs uppercase font-bold mt-0.5">
-                                {stats.mae > 15 ? 'Needs Improvement' : stats.mae > 5 ? 'Fair' : 'Excellent'}
-                            </span>
-                        </div>
-                        <div className="text-right">
-                             <span className="text-[10px] uppercase text-current/60 block font-medium">Deviation</span>
-                             <div className="text-2xl font-black tabular-nums leading-none">
-                                {stats.mae.toFixed(1)}°
+                        <div className="bg-zinc-50 rounded-[10px] p-6 h-full relative overflow-hidden flex flex-col justify-center">
+                             {/* Scanline effect (Subtle Light Mode) */}
+                            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0)_50%,rgba(0,0,0,0.02)_50%),linear-gradient(90deg,rgba(0,0,0,0.03),rgba(0,0,0,0.01),rgba(0,0,0,0.03))] z-0 pointer-events-none bg-[length:100%_4px,6px_100%]"></div>
+                            
+                            <div className="relative z-10 text-center md:text-left">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h3 className={`text-xs font-black uppercase tracking-[0.2em] ${
+                                        isWarning ? 'text-red-500 drop-shadow-sm' : 'text-cyan-600 drop-shadow-sm'
+                                    }`}>
+                                        {isWarning ? 'CRITICAL_ERROR' : 'SYSTEM_ADVICE'}
+                                    </h3>
+                                    {isWarning && <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>}
+                                </div>
+                                <p className={`text-2xl font-bold leading-tight uppercase font-mono break-words ${
+                                    isWarning ? 'text-red-600' : 'text-zinc-800'
+                                }`}>
+                                    {(stats.feedback || "SYSTEM_READY").replace(/⚠️|✅|❌/g, '').replace(" | ", "\n").trim() || "WAITING FOR INPUT..."}
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    {stats.feedback && (
-                        <div className={`p-4 rounded-xl border transition-colors shadow-sm ${
-                            isWarning 
-                                ? 'bg-red-500/10 border-red-500/30' 
-                                : 'bg-yellow-500/10 border-yellow-500/20'
-                        }`}>
-                            <h3 className={`font-bold text-sm mb-1 ${
-                                isWarning ? 'text-red-500' : 'text-yellow-600'
-                            }`}>
-                                {isWarning ? '⚠️ CRITICAL FEEDBACK' : 'AI COACH TIPS'}
-                            </h3>
-                            <p className={`text-lg leading-tight ${
-                                isWarning ? 'text-red-700' : 'text-zinc-700'
-                            }`}>
-                                {stats.feedback}
-                            </p>
+                    {/* Form Quality (MAE) - Expanded */}
+                    <div className={`rounded-xl border-l-8 overflow-hidden shadow-lg bg-white h-32 flex flex-col justify-center ${
+                        stats.mae > 15 
+                            ? 'border-red-500'     
+                            : stats.mae > 5 
+                                ? 'border-yellow-400' 
+                                : 'border-emerald-500' 
+                    }`}>
+                        <div className="px-6 py-2 flex justify-between items-center h-full">
+                            <div className="flex flex-col text-left">
+                                <span className="text-xs font-black uppercase tracking-widest text-zinc-400">Form Quality</span>
+                                <span className={`text-2xl uppercase font-black mt-1 ${
+                                    stats.mae > 15 ? 'text-red-600' : stats.mae > 5 ? 'text-yellow-600' : 'text-emerald-600'
+                                }`}>
+                                    {stats.mae > 15 ? 'Needs Improvement' : stats.mae > 5 ? 'Fair' : 'Excellent'}
+                                </span>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-5xl font-black tabular-nums leading-none text-zinc-900 tracking-tighter">
+                                    {stats.mae.toFixed(1)}°
+                                </div>
+                                <span className="text-[10px] uppercase text-zinc-400 tracking-wider font-bold">Deviation</span>
+                            </div>
                         </div>
-                    )}
+                        {/* Mini Graph Bar */}
+                        <div className="h-2 w-full bg-zinc-100 flex mt-auto">
+                            <div 
+                                className={`h-full transition-all duration-500 ${stats.mae > 15 ? 'bg-red-500' : stats.mae > 5 ? 'bg-yellow-400' : 'bg-emerald-500'}`} 
+                                style={{ width: `${Math.min(100, (stats.mae / 30) * 100)}%` }}
+                            ></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

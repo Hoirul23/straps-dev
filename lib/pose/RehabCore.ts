@@ -394,7 +394,7 @@ export class RehabCore {
         if (!counters || counters.length === 0) return 0;
 
         if (configKey === 'hammer_curl') {
-             return counters.reduce((sum, c) => sum + c.reps, 0);
+             return Math.min(...counters.map(c => c.reps));
         }
         
         // If multiple counters (bilateral), usually we return the SUM or MAX or MIN?
