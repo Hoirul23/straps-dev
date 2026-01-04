@@ -442,7 +442,7 @@ function TrainingPage() {
                         <Link 
                             href="/client/training"
                             className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
-                                !(new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free')
+                                !(mode === 'free')
                                 ? 'bg-white text-primary shadow-sm' 
                                 : 'text-zinc-400 hover:text-zinc-600'
                             }`}
@@ -452,7 +452,7 @@ function TrainingPage() {
                         <Link 
                             href="/client/training?mode=free"
                             className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
-                                (new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free')
+                                (mode === 'free')
                                 ? 'bg-white text-primary shadow-sm' 
                                 : 'text-zinc-400 hover:text-zinc-600'
                             }`}
@@ -523,7 +523,7 @@ function TrainingPage() {
                                      CREATE PERSONAL MENU
                                 </Link>
 
-                                {new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free' && (
+                                {mode === 'free' && (
                                     <Link 
                                         href="/client/training"
                                         className="mt-2 text-zinc-400 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"

@@ -75,12 +75,13 @@ export const EXERCISE_CONFIGS: { [key: string]: ExerciseConfig } = {
         phase_type: 'start_down', // Starts at shoulders, goes UP. Actually "Down" state is hands at shoulders. "Up" is hands in air.
         detection: { shoulder_down: [50, 120] }, // Relaxed detection
         dynamic_angles: {
-            'elbow_down': [40, 120], // Relaxed bottom position (can stop at chin level)
-            'elbow_up': [130, 180], // Relaxed lockout (sometimes 140 is enough)
-            'shoulder_down': [50, 120], // Relaxed shoulder range
-            'shoulder_up': [130, 180] // Relaxed top range
+            'elbow_down': [20, 80], // Relaxed bottom position (can stop at chin level)
+            'elbow_up': [160, 180], // Relaxed lockout (sometimes 140 is enough)
+            'shoulder_down': [40, 100], // Relaxed shoulder range
+            'shoulder_up': [160, 180] // Relaxed top range
         },
-        static_angles: { 'hip_r': 170, 'hip_l': 170 }, // Standing straight
+        static_angles: { 'hip_r': 165, 'hip_l': 165 }, // Standing straight
+        wrist_distance: [0, 0.2],
         convex_hull: { down: [0.05, 0.15], up: [0.15, 0.3] }
     },
     'lateral_raises': {

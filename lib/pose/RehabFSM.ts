@@ -9,6 +9,12 @@ export const LM = {
   RIGHT_ELBOW: 14,
   LEFT_WRIST: 15,
   RIGHT_WRIST: 16,
+  LEFT_PINKY: 17,  // NEW
+  RIGHT_PINKY: 18, // NEW
+  LEFT_INDEX: 19,
+  RIGHT_INDEX: 20,
+  LEFT_THUMB: 21,  // NEW
+  RIGHT_THUMB: 22, // NEW
   LEFT_HIP: 23,
   RIGHT_HIP: 24,
   LEFT_KNEE: 25,
@@ -45,11 +51,16 @@ export type PoseFeatures = {
   leftElbow: number; rightElbow: number;
   leftKnee: number; rightKnee: number;
   leftHip: number; rightHip: number;
+  leftShoulder: number; rightShoulder: number; // NEW: Press/Posture Angle
 
   // normalized coords (0..1), y lebih besar = lebih bawah
   leftWristY: number; rightWristY: number;
   leftShoulderY: number; rightShoulderY: number;
   noseY: number;
+
+  // NEW: Hand Orientation Data
+  leftThumbY: number; leftPinkyY: number;
+  rightThumbY: number; rightPinkyY: number;
 
   visArms: number; visLegs: number;
 };
@@ -74,17 +85,27 @@ export function computeFeatures(
   const armsIdx = [LM.LEFT_SHOULDER, LM.LEFT_ELBOW, LM.LEFT_WRIST, LM.RIGHT_SHOULDER, LM.RIGHT_ELBOW, LM.RIGHT_WRIST];
   const legsIdx = [LM.LEFT_HIP, LM.LEFT_KNEE, LM.LEFT_ANKLE, LM.RIGHT_HIP, LM.RIGHT_KNEE, LM.RIGHT_ANKLE];
 
+  const leftShoulderP = angleDeg(A(LM.LEFT_ELBOW), A(LM.LEFT_SHOULDER), A(LM.LEFT_HIP));
+  const rightShoulderP = angleDeg(A(LM.RIGHT_ELBOW), A(LM.RIGHT_SHOULDER), A(LM.RIGHT_HIP));
+
   return {
     tMs,
     leftElbow, rightElbow,
     leftKnee, rightKnee,
     leftHip, rightHip,
+    leftShoulder: leftShoulderP, rightShoulder: rightShoulderP,
 
     leftWristY: N(LM.LEFT_WRIST).y,
     rightWristY: N(LM.RIGHT_WRIST).y,
     leftShoulderY: N(LM.LEFT_SHOULDER).y,
     rightShoulderY: N(LM.RIGHT_SHOULDER).y,
     noseY: N(LM.NOSE).y,
+
+    // Capture Thumb/Pinky Y for grip check
+    leftThumbY: N(LM.LEFT_THUMB).y,
+    leftPinkyY: N(LM.LEFT_PINKY).y,
+    rightThumbY: N(LM.RIGHT_THUMB).y,
+    rightPinkyY: N(LM.RIGHT_PINKY).y,
 
     visArms: meanVisibility(world, armsIdx),
     visLegs: meanVisibility(world, legsIdx),
@@ -205,14 +226,13 @@ export class RepFSM {
 // =======================
 // Exercise counters
 // =======================
-export class BicepCurlCounter extends RepFSM {
-  constructor(public side: "left" | "right" = "right") {
-    // Tuned: minRomDeg=70 (usually good)
-    // You can relax if too strict: e.g. 60
-    super("bicep_curl", 0.6, 0.25, 0.8, 900, 120, 500, 12000, 70);
+// --- Base Class for Curls ---
+class BaseCurlCounter extends RepFSM {
+  constructor(public side: "left" | "right", name: string) {
+    super(name, 0.6, 0.25, 0.8, 900, 120, 500, 12000, 70);
   }
-  private highTh = 65;
-  private lowTh = 150;
+  private highTh = 85;
+  private lowTh = 140;
 
   visibilityOk(f: PoseFeatures) { return f.visArms >= this.minVis; }
   metric(f: PoseFeatures) { return this.side === "right" ? f.rightElbow : f.leftElbow; }
@@ -220,20 +240,63 @@ export class BicepCurlCounter extends RepFSM {
   isHigh(m: number) { return m <= this.highTh; }
 }
 
-export class HammerCurlCounter extends BicepCurlCounter {
+export class BicepCurlCounter extends BaseCurlCounter {
   constructor(side: "left" | "right" = "right") {
-    super(side);
-    this.name = "hammer_curl";
+    super(side, "bicep_curl");
+  }
+
+  // Bicep Curl = Horizontal Grip (Supinated)
+  // The thumb and pinky should be roughly level in Y (vertical height).
+  // If thumb is significantly higher than pinky, it's a Hammer grip.
+  extraValid(f: PoseFeatures) {
+    const thumbY = this.side === "right" ? f.rightThumbY : f.leftThumbY;
+    const pinkyY = this.side === "right" ? f.rightPinkyY : f.leftPinkyY;
+    
+    // Difference: Positive means pinky is lower (Thumb is higher/Top)
+    const diff = Math.abs(pinkyY - thumbY);
+
+    // Reject if Thumb is significantly higher than Pinky (Hammer Grip)
+    // Threshold ~0.02 (normalized units)
+    if (diff > 0.03) {
+        // This looks like a Hammer curl grip (Vertical)
+        return false;
+    }
+    return true; 
+  }
+}
+
+export class HammerCurlCounter extends BaseCurlCounter {
+  constructor(side: "left" | "right" = "right") {
+    super(side, "hammer_curl");
+  }
+
+  // Hammer Curl = Vertical Grip (Neutral)
+  // The Thumb (Top) must be higher (smaller Y) than the Pinky (Bottom).
+  extraValid(f: PoseFeatures) {
+    const thumbY = this.side === "right" ? f.rightThumbY : f.leftThumbY;
+    const pinkyY = this.side === "right" ? f.rightPinkyY : f.leftPinkyY;
+    
+    // Difference: Pinky Y - Thumb Y
+    // In Hammer, Pinky is physically lower (larger Y) than Thumb.
+    // So diff should be POSITIVE and significant.
+    const diff = pinkyY - thumbY;
+
+    // Require Thumb to be "above" Pinky significantly
+    if (diff < 0.01) {
+        // If they are level (diff ~0) or inverted, it's NOT a hammer curl
+        return false;
+    }
+    return true;
   }
 }
 
 export class OverheadPressCounter extends RepFSM {
   private highMargin = 0.04;
-  private lowMargin = 0.06;
+  // private lowMargin = 0.06;
   constructor() { 
       // ROM is 0 here because metric is relative dist, handled differently or just trust threshold crossing?
       // Author set minRomDeg=0. Probably because crossing thresholds implies ROM.
-      super("overhead_press", 0.6, 0.25, 0.004, 900, 120, 500, 12000, 0); 
+      super("overhead_press", 0.45, 0.25, 0.004, 900, 120, 500, 12000, 0); 
   }
   visibilityOk(f: PoseFeatures) { return f.visArms >= this.minVis; }
   metric(f: PoseFeatures) {
@@ -241,12 +304,13 @@ export class OverheadPressCounter extends RepFSM {
     return wAvg - f.noseY;
   }
   isHigh(m: number) { return m < -this.highMargin; }
-  isLow(_m: number, f: PoseFeatures) {
-    const sAvg = 0.5 * (f.leftShoulderY + f.rightShoulderY);
-    const wAvg = 0.5 * (f.leftWristY + f.rightWristY);
-    return Math.abs(wAvg - sAvg) < this.lowMargin;
-  }
-  extraValid(f: PoseFeatures) { return f.leftElbow > 140 || f.rightElbow > 140; }
+  // isLow(_m: number, f: PoseFeatures) {
+  //   const sAvg = 0.5 * (f.leftShoulderY + f.rightShoulderY);
+  //   const wAvg = 0.5 * (f.leftWristY + f.rightWristY);
+  //   return Math.abs(wAvg - sAvg) < this.lowMargin;
+  // }
+  isLow(m: number, f: PoseFeatures) { return m > 0.02; }
+  extraValid(f: PoseFeatures) { return f.leftElbow > 110 || f.rightElbow > 110; }
 }
 
 export class LateralRaiseCounter extends RepFSM {

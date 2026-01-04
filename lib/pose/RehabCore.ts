@@ -75,10 +75,18 @@ export class RehabCore {
                 if (prefix.includes('elbow')) val = (features.leftElbow + features.rightElbow) / 2;
                 else if (prefix.includes('knee')) val = (features.leftKnee + features.rightKnee) / 2;
                 else if (prefix.includes('hip')) val = (features.leftHip + features.rightHip) / 2;
-                else if (prefix.includes('shoulder')) val = (features.leftShoulderY * 180); // Fallback
+                else if (prefix.includes('shoulder')) {
+                    // Use new Press/Posture angles
+                    if (features.leftShoulder && features.rightShoulder) {
+                         val = (features.leftShoulder + features.rightShoulder) / 2;
+                    } else {
+                        // Fallback only if new features missing (should not happen)
+                        val = 0; 
+                    }
+                }
                 
                 // Specific Overrides for correct angle sources
-                if (configKey === 'bicep_curl' && prefix === 'elbow') {
+                if ((configKey === 'bicep_curl' || configKey === 'hammer_curl') && prefix === 'elbow') {
                     // check both arms
                     const errL = calculateRangeDeviation(features.leftElbow, config.dynamic_angles[key]);
                     const errR = calculateRangeDeviation(features.rightElbow, config.dynamic_angles[key]);
