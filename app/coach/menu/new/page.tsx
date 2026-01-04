@@ -176,9 +176,7 @@ function CreateMenuPage() {
     };
 
     const EXERCISE_OPTIONS = [
-        "Bicep Curl", "Hammer Curl", "Overhead Press", "Lateral Raises",
-        "Squat", "Lunges", "Deadlift", 
-        "Shoulder Flexion", "Shoulder Abduction", "Hip Abduction", "Knee Extension", "Front Raise", "Sit to Stand"
+        "Bicep Curl", "Hammer Curl", "Squat", "Deadlift", "Lunges", "Overhead Press", "Lateral Raises"
     ];
 
     return (
