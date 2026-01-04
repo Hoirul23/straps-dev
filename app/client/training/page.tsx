@@ -36,10 +36,13 @@ function TrainingPage() {
     const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
     // const [currentSet, setCurrentSet] = useState(1); // REMOVED: Linear Progression uses index only
     const [repsOffset, setRepsOffset] = useState(0); // Offset for accumulated reps
-    const [stats, setStats] = useState({ exercise: '', reps: 0, status: 'Idle', feedback: '', mae: 0 });
+    const [stats, setStats] = useState({ exercise: '', reps: 0, status: 'Idle', feedback: '',  mae: 0});
     const [isWorkoutComplete, setIsWorkoutComplete] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     
+    const [feedbackMsg, setFeedbackMsg] = useState<string>("");
+    const [isWarning, setIsWarning] = useState<boolean>(false);
+
     // Rest Timer State
     const [isResting, setIsResting] = useState(false);
     const [restTimer, setRestTimer] = useState(0);
@@ -304,6 +307,16 @@ function TrainingPage() {
                             feedback: res.feedback,
                             mae: (res.debug as any)?.scores?.deviation_mae || 0
                         });
+
+                        // Update Feedback UI State
+                        if (res.feedback) {
+                            setFeedbackMsg(res.feedback);
+                            // Detect Warning Flag (⚠️) from RehabCore
+                            setIsWarning(res.feedback.includes("⚠️"));
+                        } else {
+                            setFeedbackMsg("");
+                            setIsWarning(false);
+                        }
                      }
                 }
             }
@@ -442,7 +455,7 @@ function TrainingPage() {
                         <Link 
                             href="/client/training"
                             className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
-                                !(mode === 'free')
+                                !(new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free')
                                 ? 'bg-white text-primary shadow-sm' 
                                 : 'text-zinc-400 hover:text-zinc-600'
                             }`}
@@ -452,7 +465,7 @@ function TrainingPage() {
                         <Link 
                             href="/client/training?mode=free"
                             className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
-                                (mode === 'free')
+                                (new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free')
                                 ? 'bg-white text-primary shadow-sm' 
                                 : 'text-zinc-400 hover:text-zinc-600'
                             }`}
@@ -475,6 +488,41 @@ function TrainingPage() {
                            {stats.status.toUpperCase()}
                        </div>
                    </div> */}
+
+                    {/* --- NEW: FEEDBACK OVERLAY WINDOW --- */}
+                   {feedbackMsg && (
+                      <div className={`absolute top-8 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-xl shadow-2xl border-2 transition-all duration-300 z-50 flex items-center gap-4 max-w-md w-full
+                        ${isWarning 
+                          ? "bg-red-500/95 border-red-700 text-white animate-pulse" // Critical Warning
+                          : "bg-yellow-400/95 border-yellow-600 text-zinc-900"    // Form Correction
+                        }`}
+                      >
+                        {/* Icon */}
+                        {isWarning ? (
+                            <div className="p-2 bg-white/20 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                        ) : (
+                            <div className="p-2 bg-white/20 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        )}
+                        
+                        {/* Text */}
+                        <div className="flex-1">
+                            <h3 className="font-black text-sm uppercase tracking-widest mb-1 opacity-90">
+                              {isWarning ? "Incorrect Exercise" : "Form Check"}
+                            </h3>
+                            <p className="font-bold text-lg leading-tight whitespace-pre-wrap">
+                              {feedbackMsg.replace(" | ", "\n").replace("⚠️ ", "")}
+                            </p>
+                        </div>
+                      </div>
+                   )}
 
                    {/* Rest Overlay */}
                    {isResting && (
@@ -523,7 +571,7 @@ function TrainingPage() {
                                      CREATE PERSONAL MENU
                                 </Link>
 
-                                {mode === 'free' && (
+                                {new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('mode') === 'free' && (
                                     <Link 
                                         href="/client/training"
                                         className="mt-2 text-zinc-400 text-xs font-bold uppercase tracking-widest hover:text-primary transition-colors"
@@ -633,32 +681,43 @@ function TrainingPage() {
                          </div>
                     </div>
 
-                    {/* Form Quality Card (New Feature) */}
                     <div className={`p-4 rounded-xl border flex justify-between items-center transition-colors shadow-sm ${
-                        (stats.mae || 0) > 15 
+                        stats.mae > 15 
                             ? 'bg-red-50 border-red-200 text-red-600'     
-                            : (stats.mae || 0) > 5 
+                            : stats.mae > 5 
                                 ? 'bg-yellow-50 border-yellow-200 text-yellow-600' 
                                 : 'bg-emerald-50 border-emerald-200 text-emerald-600' 
                     }`}>
                         <div className="flex flex-col text-left">
                             <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Form Quality</span>
                             <span className="text-xs uppercase font-bold mt-0.5">
-                                {(stats.mae || 0) > 15 ? 'Needs Improvement' : (stats.mae || 0) > 5 ? 'Fair' : 'Excellent'}
+                                {stats.mae > 15 ? 'Needs Improvement' : stats.mae > 5 ? 'Fair' : 'Excellent'}
                             </span>
                         </div>
                         <div className="text-right">
                              <span className="text-[10px] uppercase text-current/60 block font-medium">Deviation</span>
                              <div className="text-2xl font-black tabular-nums leading-none">
-                                {(stats.mae || 0).toFixed(1)}°
+                                {stats.mae.toFixed(1)}°
                             </div>
                         </div>
                     </div>
 
                     {stats.feedback && (
-                        <div className="bg-yellow-500/10 p-4 rounded-xl border border-yellow-500/20">
-                            <h3 className="text-yellow-500 font-bold text-sm mb-1">AI Coach</h3>
-                            <p className="text-yellow-100 text-lg leading-tight">{stats.feedback}</p>
+                        <div className={`p-4 rounded-xl border transition-colors shadow-sm ${
+                            isWarning 
+                                ? 'bg-red-500/10 border-red-500/30' 
+                                : 'bg-yellow-500/10 border-yellow-500/20'
+                        }`}>
+                            <h3 className={`font-bold text-sm mb-1 ${
+                                isWarning ? 'text-red-500' : 'text-yellow-600'
+                            }`}>
+                                {isWarning ? '⚠️ CRITICAL FEEDBACK' : 'AI COACH TIPS'}
+                            </h3>
+                            <p className={`text-lg leading-tight ${
+                                isWarning ? 'text-red-700' : 'text-zinc-700'
+                            }`}>
+                                {stats.feedback}
+                            </p>
                         </div>
                     )}
                 </div>
