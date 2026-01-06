@@ -298,12 +298,12 @@ export class OverheadPressCounter extends RepFSM {
   
   // High State (Lockout) > 140 deg
   isHigh(m: number) { 
-      return m > 140; 
+      return m > 150; 
   }
   
   // Low State (Start/Chin level) < 120 deg
   isLow(m: number) { 
-      return m < 110; 
+      return m < 140; 
   } 
 
   // Validation: Ensure hands are ABOVE shoulders

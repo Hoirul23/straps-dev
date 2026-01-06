@@ -6,6 +6,22 @@ import {
 } from './RehabFSM';
 import { calculateRangeDeviation, computeMAE } from './MathUtils';
 
+const normalizeExerciseName = (input: string): string => {
+    if (!input) return '';
+    const clean = input.toLowerCase().trim().replace(/\s+/g, '_'); // "Overhead Press" -> "overhead_press"
+
+    // Map common variations to internal keys
+    if (clean.includes('bicep')) return 'bicep_curl';
+    if (clean.includes('hammer')) return 'hammer_curl';
+    if (clean.includes('overhead') || clean.includes('shoulder_press')) return 'shoulder_press';
+    if (clean.includes('lateral')) return 'lateral_raises';
+    if (clean.includes('squat')) return 'squat';
+    if (clean.includes('deadlift')) return 'deadlift';
+    if (clean.includes('lunge')) return 'lunges';
+
+    return clean; // Fallback
+};
+
 // Map UI names to Counter Classes
 const COUNTER_MAP: { [key: string]: () => RepFSM[] } = {
     'bicep_curl': () => [new BicepCurlCounter('left'), new BicepCurlCounter('right')],
@@ -30,104 +46,78 @@ export class RehabCore {
 
     public reset() {
         this.counters = {};
+        console.log("RehabCore: Counters reset");
     }
 
     // --- UPDATED: Comprehensive 6-Way Wrong Exercise Detection ---
     private validateExerciseType(
-        expectedExercise: string, 
+        configKey: string, 
         features: PoseFeatures
     ): string | null {
-        
-        // --- Feature Extraction ---
-        // 1. Legs
+        // Feature Extraction
         const minKneeAngle = Math.min(features.leftKnee, features.rightKnee);
-        const isLegsBent = minKneeAngle < 130; // Squat, Lunge, Sitting
+        const isLegsBent = minKneeAngle < 130; 
         
-        // 2. Arms (Elbows)
         const minElbowAngle = Math.min(features.leftElbow, features.rightElbow);
-        const isElbowsBent = minElbowAngle < 110; // Curls, Press
-        const isArmsStraight = minElbowAngle > 140; // Lateral Raise, Deadlift arms
+        const isElbowsBent = minElbowAngle < 110; 
+        const isArmsStraight = minElbowAngle > 140; 
         
-        // 3. Hands Height (Relative to Nose/Shoulders)
         const isHandsOverhead = (features.leftWristY < features.noseY) || (features.rightWristY < features.noseY);
         const isHandsLow = (features.leftWristY > features.leftShoulderY) && (features.rightWristY > features.rightShoulderY);
         
-        // 4. Coordination (Simultaneous vs Alternating)
-        // Check if one arm is bent while the other is straight
         const diffElbow = Math.abs(features.leftElbow - features.rightElbow);
-        const isAlternating = diffElbow > 40; // One arm moving, one resting
-        const isSimultaneous = diffElbow < 20; // Both arms moving together
+        const isAlternating = diffElbow > 40; 
+        const isSimultaneous = diffElbow < 20;
 
-        // --- Logic Matrix ---
-
-        // A. EXPECTED: BICEP CURL
-        if (expectedExercise === 'bicep_curl') {
+       if (configKey === 'bicep_curl') {
             if (isLegsBent) return "Detected: Squat/Lunge. Stand straight for Curls.";
             if (isHandsOverhead) return "Detected: Overhead Press. Keep elbows down.";
             if (isArmsStraight && !isHandsLow) return "Detected: Lateral Raise. Bend your elbows.";
-            if (features.leftHip < 130 || features.rightHip < 130) return "Detected: Deadlift motion. Keep hips straight.";
-            // Distinction vs Hammer: Bicep = Simultaneous, Hammer = Alternating (in our logic)
-            if (isAlternating) return "Detected: Hammer Curl (Alternating). Move both arms together for Bicep Curl.";
+            if (isAlternating) return "Detected: Hammer Curl (Alternating). Move both arms together.";
             return null;
         }
 
-        // B. EXPECTED: HAMMER CURL
-        if (expectedExercise === 'hammer_curl') {
+        if (configKey === 'hammer_curl') {
             if (isLegsBent) return "Detected: Squat/Lunge. Stand straight.";
             if (isHandsOverhead) return "Detected: Overhead Press. Keep elbows down.";
             if (isArmsStraight && !isHandsLow) return "Detected: Lateral Raise. Bend your elbows.";
-            if (features.leftHip < 130 || features.rightHip < 130) return "Detected: Deadlift motion. Keep hips straight.";
-            // Distinction vs Bicep: Hammer = Alternating
-            if (isSimultaneous && isElbowsBent) return "Detected: Bicep Curl (Simultaneous). Alternate arms for Hammer Curl.";
+            if (isSimultaneous && isElbowsBent) return "Detected: Bicep Curl (Simultaneous). Alternate arms.";
             return null;
         }
 
-        // C. EXPECTED: SHOULDER PRESS
-        if (expectedExercise === 'shoulder_press') {
+        if (configKey === 'shoulder_press') {
             if (isLegsBent) return "Detected: Squat/Lunge. Focus on upper body.";
             if (isHandsLow && isElbowsBent) return "Detected: Bicep Curl. Push weight UP, not curl.";
             if (isArmsStraight && !isHandsOverhead) return "Detected: Lateral Raise/Deadlift. Press overhead.";
-            // Note: Press is simultaneous, so alternating check is less critical but valid warning
             if (isAlternating) return "Detected: Alternating Press. Push both arms together.";
             return null;
         }
 
-        // D. EXPECTED: LATERAL RAISES
-        if (expectedExercise === 'lateral_raises') {
+        if (configKey === 'lateral_raises') {
             if (isLegsBent) return "Detected: Squat/Lunge. Stand straight.";
             if (isHandsOverhead) return "Detected: Overhead Press. Stop at shoulder height.";
             if (isElbowsBent) return "Detected: Bicep/Hammer Curl. Keep arms straight (T-pose).";
-             if (features.leftHip < 130) return "Detected: Deadlift. Keep torso upright.";
             return null;
         }
 
-        // E. EXPECTED: SQUAT
-        if (expectedExercise === 'squat') {
-            // Legs must be bent (eventually), but if they are purely standing and curling...
+        if (configKey === 'squat') {
             if (!isLegsBent && isElbowsBent) return "Detected: Bicep/Hammer Curl. Bend your knees!";
             if (!isLegsBent && isHandsOverhead) return "Detected: Overhead Press. Focus on legs.";
-            if (!isLegsBent && isArmsStraight && !isHandsLow) return "Detected: Lateral Raise. Focus on legs.";
-             // Squat vs Lunge: Squat = symmetrical legs. Lunge = asymmetrical.
             const diffKnee = Math.abs(features.leftKnee - features.rightKnee);
             if (isLegsBent && diffKnee > 30) return "Detected: Lunge. Keep knees symmetrical for Squat.";
             return null;
         }
 
-        // F. EXPECTED: LUNGES
-        if (expectedExercise === 'lunges') {
+        if (configKey === 'lunges') {
              if (!isLegsBent && isElbowsBent) return "Detected: Curl. Focus on legs.";
              if (!isLegsBent && isHandsOverhead) return "Detected: Press. Focus on legs.";
-             // Lunge vs Squat
              const diffKnee = Math.abs(features.leftKnee - features.rightKnee);
              if (isLegsBent && diffKnee < 15) return "Detected: Squat. Step one foot back for Lunge.";
              return null;
         }
 
-        // G. EXPECTED: DEADLIFT
-        if (expectedExercise === 'deadlift') {
-            // Hip Hinge is key.
+        if (configKey === 'deadlift') {
             const isHipsBent = features.leftHip < 140 || features.rightHip < 140;
-            
             if (!isHipsBent && isElbowsBent) return "Detected: Curl. Keep arms straight/locked.";
             if (!isHipsBent && isHandsOverhead) return "Detected: Press. Keep bar low.";
             if (!isHipsBent && isLegsBent) return "Detected: Squat (Too much knee). Hinge at hips more.";
@@ -138,111 +128,52 @@ export class RehabCore {
     }
 
     private calculateDeviation(
-        exerciseName: string, 
+        configKey: string, 
         features: any, 
         fsmState: "LOW" | "HIGH"
     ): { mae: number; isDeviating: boolean; details: string[] } {
         
-        // 1. Normalize name to match keys in EXERCISE_CONFIGS
-        const KEY_MAP: {[key:string]: string} = {
-            'bicep_curls': 'bicep_curl',
-            'shoulder_press': 'shoulder_press',
-            'hammer_curls': 'hammer_curl',
-            'lateral_raises': 'lateral_raises',
-            'squats': 'squat',
-            'deadlifts': 'deadlift',
-            'lunges': 'lunges'
-        };
-        const configKey = KEY_MAP[exerciseName] || exerciseName;
         const config = EXERCISE_CONFIGS[configKey];
         
         if (!config || !config.dynamic_angles) {
             return { mae: 0, isDeviating: false, details: [] };
         }
 
-        // 2. Map FSM State to Config Phase ('up' or 'down')
-        // Logic: 
-        // If phase_type is 'start_down' (e.g. Curl): LOW state = down phase, HIGH state = up phase.
-        // If phase_type is 'start_up' (e.g. Squat): LOW state = up phase (standing), HIGH state = down phase (squatting).
-        
         let targetSuffix = '';
-        
         if (config.phase_type === 'start_down') {
             targetSuffix = (fsmState === 'HIGH') ? '_up' : '_down';
         } else {
-            // start_up (Squat)
             targetSuffix = (fsmState === 'HIGH') ? '_down' : '_up'; 
         }
 
         const errors: number[] = [];
         const details: string[] = [];
 
-        // 3. Iterate relevant joints in features vs config
-        // Mapping Feature names to Config keys prefixes
-        const featureMap: {[key: string]: number} = {
-            'elbow': (features.leftElbow + features.rightElbow) / 2, // Average or check both
-            'shoulder': (features.leftShoulderY + features.rightShoulderY) / 2, // Approx
-            'knee': Math.min(features.leftKnee, features.rightKnee),
-            'hip': Math.min(features.leftHip, features.rightHip)
-        };
-
-        // Specific checks for left/right split if needed, but using averages for MAE simplicity here
-        // or check specific bilateral angles:
-        
-        // Helper to check a specific joint angle from config
-        const checkJoint = (configPrefix: string, featureVal: number) => {
-            const key = `${configPrefix}${targetSuffix}`; // e.g., 'elbow_up'
-            const range = config.dynamic_angles[key];
-            
-            if (range) {
-                const err = calculateRangeDeviation(featureVal, range);
-                if (err > 0) {
-                    errors.push(err);
-                    details.push(`${key}: ${err.toFixed(1)}° dev`);
-                } else {
-                    errors.push(0);
-                }
-            }
-        };
-
-        // Apply checks based on exercise type (Manual mapping or generic loop)
-        // Generic loop over config keys that match current suffix
         Object.keys(config.dynamic_angles).forEach(key => {
             if (key.endsWith(targetSuffix)) {
-                const prefix = key.replace(targetSuffix, ''); // 'elbow', 'shoulder'
-                
-                // Fetch value from features. 
-                // We need to map config keys (e.g., 'elbow') to Feature properties (e.g., 'leftElbow')
+                const prefix = key.replace(targetSuffix, ''); 
                 let val = 0;
-                
-                // Simple heuristics to map config string to feature value
-                if (prefix.includes('elbow')) val = (features.leftElbow + features.rightElbow) / 2;
-                else if (prefix.includes('knee')) val = (features.leftKnee + features.rightKnee) / 2;
-                else if (prefix.includes('hip')) val = (features.leftHip + features.rightHip) / 2;
-                else if (prefix.includes('shoulder')) val = (features.leftShoulderY * 180); // Fallback, usually Y is pos not angle
-                
-                // Specific Overrides for correct angle sources
-                if (configKey === 'bicep_curl' && prefix === 'elbow') {
-                    // check both arms
+
+                // --- FIX: Specific Handling for Overhead Press & Curls (Dual Arm Checks) ---
+                if ((configKey === 'bicep_curl' || configKey === 'hammer_curl' || configKey === 'shoulder_press') && prefix === 'elbow') {
                     const errL = calculateRangeDeviation(features.leftElbow, config.dynamic_angles[key]);
                     const errR = calculateRangeDeviation(features.rightElbow, config.dynamic_angles[key]);
                     errors.push(errL, errR);
                     if(errL > 0) details.push(`L_${key} dev ${errL.toFixed(0)}`);
                     if(errR > 0) details.push(`R_${key} dev ${errR.toFixed(0)}`);
-                    return; // skip generic add
+                    return; 
                 }
                 
-                if (configKey === 'squat' && (prefix === 'knee' || prefix === 'hip')) {
-                     const err = calculateRangeDeviation(val, config.dynamic_angles[key]);
-                     errors.push(err);
-                     if(err > 0) details.push(`${key} dev ${err.toFixed(0)}`);
-                     return;
-                }
-
-                // If strictly standard naming
+                // Standard Averaging Logic (As requested)
+                if (prefix.includes('elbow')) val = (features.leftElbow + features.rightElbow) / 2;
+                else if (prefix.includes('knee')) val = (features.leftKnee + features.rightKnee) / 2;
+                else if (prefix.includes('hip')) val = (features.leftHip + features.rightHip) / 2;
+                else if (prefix.includes('shoulder')) val = (features.leftShoulderY * 180); 
+                
                 if(val > 0) {
                      const err = calculateRangeDeviation(val, config.dynamic_angles[key]);
                      errors.push(err);
+                     if(err > 0) details.push(`${key} dev ${err.toFixed(0)}`);
                 }
             }
         });
@@ -257,24 +188,26 @@ export class RehabCore {
     }
 
     public process(exerciseName: string, landmarks: Landmark[], worldLandmarks: Landmark[] = [], frameTime: number = 0) {
-         // Normalize exercise name
-         const KEY_MAP: {[key:string]: string} = {
-            'bicep_curls': 'bicep_curl',
-            'shoulder_press': 'shoulder_press',
-            'hammer_curls': 'hammer_curl',
-            'lateral_raises': 'lateral_raises',
-            'squats': 'squat',
-            'deadlifts': 'deadlift',
-            'lunges': 'lunges'
-        };
-        const configKey = KEY_MAP[exerciseName] || exerciseName;
+        //  // Normalize exercise name
+        //  const KEY_MAP: {[key:string]: string} = {
+        //     'bicep_curls': 'bicep_curl',
+        //     'shoulder_press': 'shoulder_press',
+        //     'hammer_curls': 'hammer_curl',
+        //     'lateral_raises': 'lateral_raises',
+        //     'squats': 'squat',
+        //     'deadlifts': 'deadlift',
+        //     'lunges': 'lunges'
+        // };
+        const configKey = normalizeExerciseName(exerciseName);
 
         // Init counters if not exists
         if (!this.counters[configKey]) {
             const factory = COUNTER_MAP[configKey];
             if (factory) {
+                console.log(`RehabCore: Initialized counter for ${configKey}`);
                 this.counters[configKey] = factory();
             } else {
+                console.warn(`RehabCore: No factory found for exercise "${configKey}" (Raw: ${exerciseName})`);
                 return null; // Unknown exercise
             }
         }
@@ -358,7 +291,7 @@ export class RehabCore {
         }
 
         if (wrongExerciseWarning) {
-            feedback += ` | ⚠️ ${wrongExerciseWarning}`;
+            feedback = `⚠️ ${wrongExerciseWarning}`;
         }
 
         // Append Deviation info to feedback
@@ -379,17 +312,17 @@ export class RehabCore {
     }
     
     public getReps(exName: string) {
-         // Normalized key
-         const KEY_MAP: {[key:string]: string} = {
-            'bicep_curls': 'bicep_curl',
-            'shoulder_press': 'shoulder_press',
-            'hammer_curls': 'hammer_curl',
-            'lateral_raises': 'lateral_raises',
-            'squats': 'squat',
-            'deadlifts': 'deadlift',
-            'lunges': 'lunges'
-        };
-        const configKey = KEY_MAP[exName] || exName;
+        //  // Normalized key
+        //  const KEY_MAP: {[key:string]: string} = {
+        //     'bicep_curls': 'bicep_curl',
+        //     'shoulder_press': 'shoulder_press',
+        //     'hammer_curls': 'hammer_curl',
+        //     'lateral_raises': 'lateral_raises',
+        //     'squats': 'squat',
+        //     'deadlifts': 'deadlift',
+        //     'lunges': 'lunges'
+        // };
+        const configKey = normalizeExerciseName(exName);
         const counters = this.counters[configKey];
         if (!counters || counters.length === 0) return 0;
 

@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { HARCore } from '@/lib/pose/HARCore';
 // Import from the official tasks-vision package
 import { PoseLandmarker, FilesetResolver, DrawingUtils, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
-import { RefreshCcw, ArrowLeft, PlayCircle } from 'lucide-react';
+import { RefreshCcw, ArrowLeft, PlayCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -42,6 +42,19 @@ function TrainingPage() {
     
     const [feedbackMsg, setFeedbackMsg] = useState<string>("");
     const [isWarning, setIsWarning] = useState<boolean>(false);
+    
+    // UI State
+    const [expandedSet, setExpandedSet] = useState<number | null>(null);
+    
+    // Recap State
+    const [results, setResults] = useState<any[]>([]);
+    const maeBuffer = useRef<number[]>([]);
+    
+    // Per-Rep Tracking
+    const repBuffer = useRef<number[]>([]);
+    const repFeedbackBuffer = useRef<string[]>([]); // Buffer for feedback text
+    const lastRepCount = useRef(0);
+    const currentSetReps = useRef<{rep: number, score: number, feedback: string}[]>([]);
 
     // Rest Timer State
     const [isResting, setIsResting] = useState(false);
@@ -98,6 +111,7 @@ function TrainingPage() {
         }
     };
 
+    // Init Logic and Load Models
     useEffect(() => {
         let isMounted = true;
 
@@ -109,9 +123,7 @@ function TrainingPage() {
                 // 2. Init Core
                 const core = new HARCore();
                 harRef.current = core;
-                // Pre-set exercise if menu loaded? 
-                // We'll update it in the loop or effect.
-
+                
                 // 3. Init Vision
                 const vision = await FilesetResolver.forVisionTasks(
                     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
@@ -190,7 +202,7 @@ function TrainingPage() {
         }
     }, [menu, currentExerciseIndex]);
 
-    // Loop
+    // Frame Loop Logic
     const lastVideoTimeRef = useRef(-1);
     
     const predictWebcam = async () => {
@@ -223,10 +235,6 @@ function TrainingPage() {
                     if (result.landmarks) {
                         const drawingUtils = new DrawingUtils(ctx);
                         for (const lm of result.landmarks) {
-                            // Custom "Cyber" Drawing
-                            // drawingUtils.drawLandmarks(lm, { radius: 1, color: '#00FF00' });
-                            // drawingUtils.drawConnectors(lm, PoseLandmarker.POSE_CONNECTIONS, { color: '#00FF00', lineWidth: 2 });
-                            
                             // Config
                             const connectors = PoseLandmarker.POSE_CONNECTIONS;
                             
@@ -244,24 +252,11 @@ function TrainingPage() {
                                 ctx.moveTo(p1.x * canvas.width, p1.y * canvas.height);
                                 ctx.lineTo(p2.x * canvas.width, p2.y * canvas.height);
                                 
-                                // Color logic
-                                const isLeft = (start % 2 === 1) || (end % 2 === 1); // Odd indices are usually left in MP
-                                // MP Pose: 11(L Sho), 12(R Sho). 
-                                // Actually:
-                                // 0-10: Face
-                                // 11,13,15,17,19,21: Left Arm/Hand
-                                // 12,14,16,18,20,22: Right Arm/Hand
-                                // 23,25,27,29,31: Left Leg/Foot
-                                // 24,26,28,30,32: Right Leg/Foot
-                                
                                 let color = '#00FFFF'; // Cyan
                                 let glow = '#00FFFF';  // Cyan Glow
                                 
-                                // Torso can be slightly dimmer or same?
-                                // Let's stick to uniform Cyan as requested.
-                                
                                 ctx.shadowColor = glow;
-                                ctx.shadowBlur = 15; // Stronger glow
+                                ctx.shadowBlur = 15;
                                 ctx.strokeStyle = color;
                                 ctx.lineWidth = 4;
                                 ctx.stroke();
@@ -271,20 +266,16 @@ function TrainingPage() {
                             for (let i = 0; i < lm.length; i++) {
                                 const p = lm[i];
                                 if (p.visibility && p.visibility < 0.5) continue;
-                                
-                                // Skip face landmarks mostly? 0-10
                                 if (i < 11 && i !== 0) continue; // Keep nose (0)
 
                                 ctx.beginPath();
                                 ctx.arc(p.x * canvas.width, p.y * canvas.height, 5, 0, 2 * Math.PI);
-                                
                                 ctx.fillStyle = '#FFFFFF'; // White core
                                 ctx.shadowColor = '#00FFFF'; // Cyan glow
                                 ctx.shadowBlur = 20;
                                 ctx.fill();
                             }
                             
-                            // Reset context
                             ctx.shadowBlur = 0;
                         }
                     }
@@ -300,6 +291,59 @@ function TrainingPage() {
                      );
                      
                      if (res) {
+                        // Accumulate Form Score (MAE)
+                        if (res.debug && (res.debug as any).scores && (res.debug as any).scores.deviation_mae) {
+                            const val = (res.debug as any).scores.deviation_mae;
+                            if (val > 0) {
+                                maeBuffer.current.push(val);
+                                repBuffer.current.push(val); // Push to current rep buffer
+                            }
+                        }
+
+                        // Capture Feedback Text
+                        if (res.feedback && res.feedback.trim() !== "" && !res.feedback.includes("null")) {
+                             // Only push meaningful feedback
+                             repFeedbackBuffer.current.push(res.feedback);
+                        }
+
+                        // --- Rep Completion Logic ---
+                        if (res.reps > lastRepCount.current) {
+                            // Rep Finished!
+                            const avgRepScore = repBuffer.current.length > 0 
+                                ? repBuffer.current.reduce((a, b) => a + b, 0) / repBuffer.current.length 
+                                : 0;
+                            
+                            // Calculate Dominant Feedback
+                            let dominantFeedback = "Perfect";
+                            if (repFeedbackBuffer.current.length > 0) {
+                                // Find most frequent string
+                                const counts: Record<string, number> = {};
+                                let maxCount = 0;
+                                let maxKey = "";
+                                
+                                for (const fb of repFeedbackBuffer.current) {
+                                    const cleanFb = fb.trim(); 
+                                    counts[cleanFb] = (counts[cleanFb] || 0) + 1;
+                                    if (counts[cleanFb] > maxCount) {
+                                        maxCount = counts[cleanFb];
+                                        maxKey = cleanFb;
+                                    }
+                                }
+                                if (maxKey) dominantFeedback = maxKey;
+                            }
+                            
+                            currentSetReps.current.push({
+                                rep: res.reps, 
+                                score: avgRepScore,
+                                feedback: dominantFeedback
+                            });
+
+                            // Reset for next rep
+                            repBuffer.current = [];
+                            repFeedbackBuffer.current = [];
+                            lastRepCount.current = res.reps;
+                        }
+
                         setStats({
                             status: res.status,
                             exercise: res.exercise || 'Unknown',
@@ -311,7 +355,6 @@ function TrainingPage() {
                         // Update Feedback UI State
                         if (res.feedback) {
                             setFeedbackMsg(res.feedback);
-                            // Detect Warning Flag from RehabCore
                             setIsWarning(res.feedback.includes("⚠️"));
                         } else {
                             setFeedbackMsg("");
@@ -340,6 +383,30 @@ function TrainingPage() {
 
         if (isMatchingExercise) {
              if (currentRepsInSet >= currentTarget.reps) {
+                 // --- SET COMPLETE LOGIC ---
+                 
+                 // 1. Calculate Average Form Score
+                 const avgMae = maeBuffer.current.length > 0 
+                    ? maeBuffer.current.reduce((a, b) => a + b, 0) / maeBuffer.current.length 
+                    : 0;
+                
+                 // 2. Save Result
+                 setResults(prev => [...prev, {
+                     name: currentTarget.name,
+                     set: currentTarget.set_index || 1,
+                     reps: currentRepsInSet,
+                     weight: currentTarget.weight,
+                     score: avgMae,
+                     repDetails: [...currentSetReps.current] // CAPTURE REP DETAILS
+                 }]);
+                 
+                 // 3. Reset Buffers
+                 maeBuffer.current = [];
+                 repBuffer.current = [];
+                 repFeedbackBuffer.current = []; // Reset feedback too
+                 currentSetReps.current = [];
+                 lastRepCount.current = 0; // Reset for next set
+
                  // Linear Logic: Next Exercise in List
                  const nextExIdx = currentExerciseIndex + 1;
                  const restTime = (currentTarget as any).rest_time_seconds || 0;
@@ -348,7 +415,7 @@ function TrainingPage() {
                      finishWorkout();
                  } else {
                      setCurrentExerciseIndex(nextExIdx);
-                     setRepsOffset(0);
+                     setRepsOffset(stats.reps); // Important: Offset total reps
                      
                      if (restTime > 0) {
                          setIsResting(true);
@@ -375,7 +442,10 @@ function TrainingPage() {
                 body: JSON.stringify({
                     menu_id: menu.id,
                     user_id: user.id,
-                    summary
+                    summary: {
+                        ...summary,
+                        detailed_results: results // Send detailed results to backend
+                    }
                 })
             });
         } catch (e) {
@@ -396,15 +466,137 @@ function TrainingPage() {
         } catch (e) { console.error(e); } 
         finally { setIsSaving(false); }
     };
+    
+    // Helper for Form Grade
+    const getGrade = (mae: number) => {
+        if (mae < 8) return { letter: 'S', color: 'text-purple-400', label: 'Excellent' };
+        if (mae < 15) return { letter: 'A', color: 'text-green-400', label: 'Good' };
+        if (mae < 25) return { letter: 'B', color: 'text-yellow-400', label: 'Fair' };
+        return { letter: 'C', color: 'text-red-400', label: 'Needs Improvement' };
+    };
 
     if (isWorkoutComplete) {
         return (
-            <div className="min-h-screen bg-white text-zinc-900 flex flex-col items-center justify-center p-4">
-                <h1 className="text-4xl font-bold text-green-600 mb-4">Workout Complete!</h1>
-                <div className="bg-white p-8 rounded-xl border border-zinc-200 text-center shadow-xl">
-                    <p className="text-xl mb-4">Great job.</p>
-                    {isSaving ? <p className="text-blue-600">Saving...</p> : <p className="text-zinc-400">Saved.</p>}
-                     <Link href="/client" className="mt-8 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-block">Back to Dashboard</Link>
+            <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-4 font-sans">
+                <div className="max-w-2xl w-full bg-zinc-900 rounded-3xl border border-zinc-800 p-8 shadow-2xl relative overflow-hidden">
+                     {/* Cyberpunk Glow */}
+                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-primary to-purple-500"></div>
+
+                     <div className="text-center mb-8">
+                        <div className="inline-block px-4 py-1 rounded-full bg-green-500/10 text-green-400 text-xs font-bold tracking-widest uppercase mb-4 border border-green-500/20">
+                            Session Complete
+                        </div>
+                        <h1 className="text-4xl font-black text-white tracking-tight mb-2">TRAINING RECAP</h1>
+                        <p className="text-zinc-500 text-sm">Excellent work. Here is your performance breakdown.</p>
+                     </div>
+
+                     {/* Stats Grid */}
+                     <div className="grid grid-cols-2 gap-4 mb-8">
+                         <div className="bg-zinc-950/50 p-6 rounded-2xl border border-zinc-800 text-center">
+                             <div className="text-3xl font-black text-white">{results.length}</div>
+                             <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Sets Completed</div>
+                         </div>
+                         <div className="bg-zinc-950/50 p-6 rounded-2xl border border-zinc-800 text-center">
+                             <div className="text-3xl font-black text-primary">
+                                 {results.reduce((a, b) => a + b.reps, 0)}
+                             </div>
+                             <div className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Total Reps</div>
+                         </div>
+                     </div>
+
+                     {/* Detailed Results Table */}
+                     <div className="bg-zinc-950/30 rounded-2xl border border-zinc-800 overflow-hidden mb-8 max-h-[40vh] overflow-y-auto">
+                         <table className="w-full text-sm">
+                             <thead className="bg-zinc-900 border-b border-zinc-800">
+                                 <tr>
+                                     <th className="px-4 py-3 text-left font-bold text-zinc-500 uppercase tracking-wider text-[10px]">Exercise</th>
+                                     <th className="px-4 py-3 text-center font-bold text-zinc-500 uppercase tracking-wider text-[10px]">Set</th>
+                                     <th className="px-4 py-3 text-center font-bold text-zinc-500 uppercase tracking-wider text-[10px]">Load</th>
+                                     <th className="px-4 py-3 text-right font-bold text-zinc-500 uppercase tracking-wider text-[10px]">Form Score</th>
+                                 </tr>
+                             </thead>
+                             <tbody className="divide-y divide-zinc-800">
+                                 {results.map((res, i) => {
+                                     const grade = getGrade(res.score);
+                                     const isExpanded = expandedSet === i;
+                                     
+                                     return (
+                                         <React.Fragment key={i}>
+                                             <tr 
+                                                onClick={() => setExpandedSet(isExpanded ? null : i)}
+                                                className="hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+                                             >
+                                                 <td className="px-4 py-3 font-medium text-white flex items-center gap-2">
+                                                     {isExpanded ? <ChevronUp size={14} className="text-zinc-500" /> : <ChevronDown size={14} className="text-zinc-500" />}
+                                                     {res.name}
+                                                 </td>
+                                                 <td className="px-4 py-3 text-center text-zinc-400 font-mono">#{res.set}</td>
+                                                 <td className="px-4 py-3 text-center text-zinc-400">
+                                                     {res.reps}x <span className="text-zinc-600">@</span> {res.weight}kg
+                                                 </td>
+                                                <td className="px-4 py-3 text-right">
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`font-black ${grade.color}`}>{grade.label}</span>
+                                                            <span className="text-[10px] text-zinc-600 font-mono">Avg: {res.score.toFixed(1)}°</span>
+                                                        </div>
+                                                        {/* Preview Chips */}
+                                                        {!isExpanded && res.repDetails && res.repDetails.length > 0 && (
+                                                            <div className="flex justify-end gap-1">
+                                                                {res.repDetails.map((r: any, idx: number) => (
+                                                                    <div key={idx} className={`w-1.5 h-1.5 rounded-full ${getGrade(r.score).color.replace('text-','bg-')}`} />
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                             </tr>
+                                             {/* Expanded Detail Row */}
+                                             {isExpanded && (
+                                                <tr className="bg-zinc-900/50">
+                                                    <td colSpan={4} className="px-4 py-4">
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                            {res.repDetails?.map((r: any, idx: number) => {
+                                                                const rGrade = getGrade(r.score);
+                                                                const isPerfect = rGrade.label === 'Excellent';
+                                                                const hasFeedback = r.feedback && r.feedback !== 'Perfect';
+                                                                
+                                                                return (
+                                                                    <div key={idx} className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 flex flex-col gap-1">
+                                                                        <div className="flex justify-between items-center w-full">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-xs font-mono text-zinc-500">#{idx + 1}</span>
+                                                                                <span className={`text-xs font-bold ${rGrade.color}`}>{rGrade.label}</span>
+                                                                            </div>
+                                                                            <span className="text-[10px] text-zinc-600 font-mono">{r.score.toFixed(1)}°</span>
+                                                                        </div>
+                                                                        
+                                                                        {/* Feedback Text */}
+                                                                        <div className={`text-[10px] uppercase font-bold tracking-wide ${hasFeedback ? 'text-zinc-400' : 'text-zinc-600/50'}`}>
+                                                                            {hasFeedback ? `"${r.feedback}"` : "NO ISSUES DETECTED"}
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                            {(!res.repDetails || res.repDetails.length === 0) && (
+                                                                <div className="col-span-3 text-center text-zinc-500 text-xs italic py-2">No individual rep data available.</div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                             )}
+                                         </React.Fragment>
+                                     );
+                                 })}
+                             </tbody>
+                         </table>
+                     </div>
+
+                     <div className="flex gap-4">
+                        <Link href="/client" className="flex-1 px-6 py-4 bg-white text-black font-bold uppercase tracking-widest rounded-xl hover:bg-zinc-200 transition-colors text-center text-sm">
+                            Back to Dashboard
+                        </Link>
+                     </div>
                 </div>
             </div>
         );
@@ -662,14 +854,14 @@ function TrainingPage() {
                                     <h3 className={`text-xs font-black uppercase tracking-[0.2em] ${
                                         isWarning ? 'text-red-500 drop-shadow-sm' : 'text-cyan-600 drop-shadow-sm'
                                     }`}>
-                                        {isWarning ? 'CRITICAL_ERROR' : 'SYSTEM_ADVICE'}
+                                        {isWarning ? 'CRITICAL ERROR' : 'SYSTEM ADVICE'}
                                     </h3>
                                     {isWarning && <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>}
                                 </div>
                                 <p className={`text-2xl font-bold leading-tight uppercase font-mono break-words ${
                                     isWarning ? 'text-red-600' : 'text-zinc-800'
                                 }`}>
-                                    {(stats.feedback || "SYSTEM_READY").replace(/⚠️|✅|❌/g, '').replace(" | ", "\n").trim() || "WAITING FOR INPUT..."}
+                                    {(stats.feedback || "SYSTEM READY").replace(/⚠️|✅|❌/g, '').replace(" | ", "\n").trim() || "WAITING FOR INPUT..."}
                                 </p>
                             </div>
                         </div>
@@ -712,3 +904,4 @@ function TrainingPage() {
         </div>
     );
 }
+ 
